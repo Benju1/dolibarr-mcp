@@ -57,20 +57,20 @@ RUN chown -R dolibarr:dolibarr /app
 # Switch to non-root user
 USER dolibarr
 
-# Health check
+# Health check using test command
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD dolibarr-mcp test || exit 1
+    CMD python -m dolibarr_mcp.cli test || exit 1
 
 # Expose port (for future HTTP interface)
 EXPOSE 8080
 
-# Default command
-CMD ["dolibarr-mcp", "serve"]
+# Default command runs the MCP server
+CMD ["python", "-m", "dolibarr_mcp"]
 
 # Labels for metadata
 LABEL org.opencontainers.image.title="Dolibarr MCP Server" \
       org.opencontainers.image.description="Professional Model Context Protocol server for Dolibarr ERP integration" \
       org.opencontainers.image.url="https://github.com/latinogino/dolibarr-mcp" \
       org.opencontainers.image.source="https://github.com/latinogino/dolibarr-mcp" \
-      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.version="1.0.1" \
       org.opencontainers.image.licenses="MIT"
