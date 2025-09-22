@@ -12,11 +12,11 @@ def run_command(command, shell=False):
     try:
         result = subprocess.run(command, shell=shell, check=True, capture_output=True, text=True)
         command_str = ' '.join(command) if isinstance(command, list) else command
-        print(f"✓ {command_str}")
+        print(f"[OK] {command_str}")
         return True
     except subprocess.CalledProcessError as e:
         command_str = ' '.join(command) if isinstance(command, list) else command
-        print(f"✗ {command_str}")
+        print(f"[ERROR] {command_str}")
         if e.stderr:
             print(f"  Error: {e.stderr}")
         return False
@@ -73,24 +73,24 @@ def setup_environment():
     if not os.path.exists(".env"):
         if os.path.exists(".env.example"):
             shutil.copy(".env.example", ".env")
-            print("✓ Created .env from .env.example")
+            print("[OK] Created .env from .env.example")
         else:
             with open(".env", "w") as f:
                 f.write("# Dolibarr MCP Configuration\n")
                 f.write("DOLIBARR_URL=https://your-dolibarr-instance.com/api/index.php\n")
                 f.write("DOLIBARR_API_KEY=your_api_key_here\n")
                 f.write("LOG_LEVEL=INFO\n")
-            print("✓ Created default .env file")
-        print("  ⚠ Please edit .env with your Dolibarr credentials")
+            print("[OK] Created default .env file")
+        print("  [!] Please edit .env with your Dolibarr credentials")
     else:
-        print("✓ .env file already exists")
+        print("[OK] .env file already exists")
     
-    # Test import
+    # Test import - use ASCII characters to avoid encoding issues
     print("\n7. Testing installation...")
-    test_command = [python_exe, "-c", "from dolibarr_mcp.config import Config; print('✓ Import test passed')"]
+    test_command = [python_exe, "-c", "from dolibarr_mcp.config import Config; print('[OK] Import test passed')"]
     if run_command(test_command):
         print("\n" + "="*50)
-        print("✓ Setup Complete!")
+        print("[SUCCESS] Setup Complete!")
         print("="*50)
         print(f"\nVirtual environment: {os.path.abspath(venv_name)}")
         print(f"\nTo activate the environment:")
@@ -99,7 +99,7 @@ def setup_environment():
         print(f"  python -m dolibarr_mcp")
         return True
     else:
-        print("\n✗ Installation test failed!")
+        print("\n[ERROR] Installation test failed!")
         return False
 
 if __name__ == "__main__":
