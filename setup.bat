@@ -1,97 +1,53 @@
 @echo off
-:: Dolibarr MCP Setup Script - Fixed Version
-:: Handles cleanup of build artifacts before installation
+:: Dolibarr MCP Setup Script - Fixed Version 2.0
+:: Uses dedicated environment setup to avoid conflicts
 
 echo.
 echo ======================================
-echo Dolibarr MCP Development Setup
+echo Dolibarr MCP Development Setup v2.0
 echo ======================================
 echo.
 
-:: Clean up old build artifacts
+:: First, clean up any old build artifacts
 echo Cleaning up old build artifacts...
-if exist "*.egg-info" (
-    echo Removing old egg-info directories...
-    for /d %%i in (*.egg-info) do (
-        echo   Removing %%i
-        rmdir /s /q "%%i"
-    )
+
+:: Remove ALL egg-info directories recursively
+for /f "delims=" %%i in ('dir /s /b /a:d *.egg-info 2^>nul') do (
+    rmdir /s /q "%%i" 2>nul
 )
-if exist "src\*.egg-info" (
-    echo Removing src egg-info directories...
-    for /d %%i in (src\*.egg-info) do (
-        echo   Removing %%i
-        rmdir /s /q "%%i"
-    )
-)
-if exist "build" rmdir /s /q build
-if exist "dist" rmdir /s /q dist
-if exist "__pycache__" rmdir /s /q __pycache__
-if exist "src\dolibarr_mcp\__pycache__" rmdir /s /q "src\dolibarr_mcp\__pycache__"
+
+:: Clean other build directories
+if exist build rmdir /s /q build 2>nul
+if exist dist rmdir /s /q dist 2>nul
+if exist .eggs rmdir /s /q .eggs 2>nul
 
 :: Remove old virtual environment if exists
-if exist "venv_dolibarr" (
+if exist venv_dolibarr (
     echo Removing old virtual environment...
     rmdir /s /q venv_dolibarr
 )
 
-:: Create new virtual environment
 echo.
-echo Creating new virtual environment...
-python -m venv venv_dolibarr
+echo Running environment setup...
+echo.
+
+:: Run the Python setup script
+python setup_env.py
+
 if errorlevel 1 (
-    echo ERROR: Failed to create virtual environment
-    echo Make sure Python is installed and in PATH
+    echo.
+    echo ======================================
+    echo Setup failed!
+    echo ======================================
+    echo.
+    echo Troubleshooting tips:
+    echo 1. Make sure Python 3.8+ is installed
+    echo 2. Try running: python --version
+    echo 3. If issues persist, run cleanup.bat first
+    echo.
     pause
     exit /b 1
 )
 
-:: Activate and setup
-echo.
-echo Installing dependencies...
-call venv_dolibarr\Scripts\activate.bat
-
-:: Ensure pip is installed and upgraded
-python -m ensurepip --upgrade 2>nul
-python -m pip install --upgrade pip setuptools wheel
-
-:: Install requirements
-if exist requirements.txt (
-    echo Installing requirements...
-    pip install -r requirements.txt
-) else (
-    echo WARNING: requirements.txt not found
-)
-
-:: Install package in editable mode
-echo.
-echo Installing dolibarr-mcp package...
-pip install -e .
-if errorlevel 1 (
-    echo ERROR: Failed to install package
-    pause
-    exit /b 1
-)
-
-:: Create .env from example if not exists
-if not exist .env (
-    if exist .env.example (
-        echo Creating .env from .env.example...
-        copy .env.example .env
-        echo Please edit .env with your Dolibarr API credentials
-    )
-)
-
-echo.
-echo ======================================
-echo Setup Complete!
-echo ======================================
-echo.
-echo Virtual environment: venv_dolibarr
-echo.
-echo Next steps:
-echo 1. Edit .env file with your Dolibarr API credentials
-echo 2. Run: venv_dolibarr\Scripts\activate
-echo 3. Test: python -m dolibarr_mcp
 echo.
 pause
