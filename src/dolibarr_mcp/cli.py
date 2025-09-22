@@ -11,7 +11,7 @@ from .dolibarr_mcp_server import main as server_main
 
 
 @click.group()
-@click.version_option(version="1.0.0", prog_name="dolibarr-mcp")
+@click.version_option(version="1.0.1", prog_name="dolibarr-mcp")
 def cli():
     """Dolibarr MCP Server - Professional ERP integration via Model Context Protocol."""
     pass
@@ -29,13 +29,15 @@ def test(url: Optional[str], api_key: Optional[str]):
             from .dolibarr_client import DolibarrClient
             
             # Create config with optional overrides
-            config = Config()
-            if url:
-                config.dolibarr_url = url
-            if api_key:
-                config.api_key = api_key
-            
-            config.validate_config()
+            try:
+                config = Config()
+                if url:
+                    config.dolibarr_url = url
+                if api_key:
+                    config.api_key = api_key
+            except Exception as e:
+                click.echo(f"❌ Configuration error: {e}")
+                sys.exit(1)
             
             async with DolibarrClient(config) as client:
                 click.echo("🧪 Testing Dolibarr API connection...")
@@ -43,16 +45,24 @@ def test(url: Optional[str], api_key: Optional[str]):
                 # Test basic status endpoint
                 result = await client.get_status()
                 
-                if "success" in result:
+                if "success" in result or "dolibarr_version" in str(result):
                     click.echo("✅ Connection successful!")
-                    click.echo(f"Dolibarr Version: {result.get('success', {}).get('dolibarr_version', 'Unknown')}")
+                    if isinstance(result, dict) and "success" in result:
+                        version = result.get("success", {}).get("dolibarr_version", "Unknown")
+                        click.echo(f"Dolibarr Version: {version}")
                     
                     # Test a few more endpoints
-                    users = await client.get_users(limit=1)
-                    customers = await client.get_customers(limit=1)
+                    try:
+                        users = await client.get_users(limit=1)
+                        click.echo(f"Users accessible: {len(users) if isinstance(users, list) else 'Error'}")
+                    except Exception:
+                        click.echo("Users: ⚠️  Access limited or unavailable")
                     
-                    click.echo(f"Users accessible: {len(users) if isinstance(users, list) else 'Error'}")
-                    click.echo(f"Customers accessible: {len(customers) if isinstance(customers, list) else 'Error'}")
+                    try:
+                        customers = await client.get_customers(limit=1)
+                        click.echo(f"Customers accessible: {len(customers) if isinstance(customers, list) else 'Error'}")
+                    except Exception:
+                        click.echo("Customers: ⚠️  Access limited or unavailable")
                     
                 else:
                     click.echo(f"❌ Connection failed: {result}")
@@ -67,7 +77,7 @@ def test(url: Optional[str], api_key: Optional[str]):
 
 @cli.command()
 @click.option("--host", default="localhost", help="Host to bind to")
-@click.option("--port", default=8080, help="Port to bind to")
+@click.option("--port", default=8080, help="Port to bind to") 
 def serve(host: str, port: int):
     """Start the Dolibarr MCP server."""
     click.echo(f"🚀 Starting Dolibarr MCP server on {host}:{port}")
@@ -81,7 +91,7 @@ def serve(host: str, port: int):
 @cli.command()
 def version():
     """Show version information."""
-    click.echo("Dolibarr MCP Server v1.0.0")
+    click.echo("Dolibarr MCP Server v1.0.1")
     click.echo("Professional ERP integration via Model Context Protocol")
 
 
