@@ -1,389 +1,216 @@
-# 🚀 Dolibarr MCP Server
+# 🚀 Dolibarr MCP Server - Windows Fixed!
 
-<div align="center">
+Ein professioneller **Model Context Protocol (MCP) Server** für Dolibarr ERP-Integration mit **vollständiger Windows-Kompatibilität**.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-green.svg)](https://github.com/anthropics/mcp)
-[![Docker Ready](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+## 🔥 Windows Setup Problem GELÖST!
 
-**Professional Model Context Protocol server for complete Dolibarr ERP integration with AI assistants**
+**Problem**: `[WinError 5] Zugriff verweigert` beim Setup durch pywin32
+**Lösung**: Standalone Implementation ohne problematische Dependencies!
 
-</div>
+## ✅ Schnellstart für Windows (EMPFOHLEN)
 
-## 📌 Overview
+Wenn Sie das pywin32 Problem haben, verwenden Sie unsere **standalone Version**:
 
-The Dolibarr MCP Server provides a powerful bridge between AI assistants (like Claude) and your Dolibarr ERP system, enabling comprehensive business management through natural language. It implements the Model Context Protocol (MCP) to provide secure, efficient access to all Dolibarr modules.
-
-## ✨ Features
-
-### 🎯 Complete CRUD Operations
-- **Customers/Third Parties**: Create, read, update, and delete customers
-- **Products**: Full product catalog management
-- **Invoices**: Complete invoice lifecycle management
-- **Orders**: Order processing and management
-- **Users**: User administration and access control
-- **Contacts**: Contact information management
-- **Raw API Access**: Direct access to any Dolibarr endpoint
-
-### 🔧 Professional Architecture
-- **Async/await** pattern for optimal performance
-- **Type-safe** operations with comprehensive error handling
-- **Secure** API key authentication
-- **Docker-ready** for easy deployment
-- **Comprehensive logging** for debugging and monitoring
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8 or higher
-- Dolibarr instance with API enabled
-- Dolibarr API key
-
-### Installation
-
-#### Option 1: Using Setup Scripts (Windows)
-
-```bash
-# Clone the repository
+### Option 1: Standalone Setup (Windows-optimiert)
+```cmd
+# 1. Repository klonen
 git clone https://github.com/latinogino/dolibarr-mcp.git
 cd dolibarr-mcp
 
-# If you have installation issues, run cleanup first
-cleanup.bat
+# 2. Standalone Setup (KEINE pywin32 Probleme!)
+.\setup_standalone.bat
 
-# Run the automated setup
-setup.bat
-
-# Configure your credentials
+# 3. Konfiguration erstellen
 copy .env.example .env
-# Edit .env with your Dolibarr credentials
+# Bearbeiten Sie .env mit Ihren Dolibarr-Credentials
+
+# 4. Server starten
+.\run_standalone.bat
 ```
 
-#### Option 2: Manual Python Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/latinogino/dolibarr-mcp.git
-cd dolibarr-mcp
-
-# Create virtual environment
-python -m venv venv_dolibarr
-
-# Activate virtual environment
-# Windows:
-venv_dolibarr\Scripts\activate
-# Linux/Mac:
-source venv_dolibarr/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-pip install -e .
-
-# Configure your credentials
-cp .env.example .env
-# Edit .env with your Dolibarr credentials
+### Option 2: Standard MCP Setup (wenn Option 1 nicht funktioniert)
+```cmd
+# Fallback: Standard Setup
+.\setup.bat
+# Falls pywin32 Fehler auftreten, nutzen Sie Option 1
 ```
 
-#### Option 3: Using Docker (Recommended for Production)
+## 🎯 Was ist enthalten?
 
-```bash
-# Clone the repository
-git clone https://github.com/latinogino/dolibarr-mcp.git
-cd dolibarr-mcp
+### ✅ **Vollständige CRUD-Unterstützung**
+- 👥 **User Management** - Benutzer verwalten
+- 🏢 **Customer Management** - Kunden und Drittparteien
+- 📦 **Product Management** - Produkte mit Preisen und Lager
+- 🧾 **Invoice Management** - Rechnungen mit Zeilen und Status
+- 📋 **Order Management** - Bestellungen verwalten
+- 📞 **Contact Management** - Kontakte und Ansprechpartner
+- 🔌 **Raw API Access** - Direkter Zugriff auf alle Dolibarr-Endpunkte
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your credentials
+### 🛠️ **Technische Features**
+- ✅ **Windows-kompatibel** - Keine pywin32 Probleme mehr!
+- ✅ **Standalone Mode** - Funktioniert ohne MCP-Paket
+- ✅ **Interactive Testing** - Eingebaute Test-Konsole
+- ✅ **Professional Error Handling** - Detaillierte Fehlermeldungen
+- ✅ **Async Architecture** - Optimale Performance
+- ✅ **Docker Support** - Production-ready Container
 
-# Build and run with Docker Compose
-docker-compose up -d
-```
+## 🔧 Dolibarr Setup
 
-### Configuration
+### 1. **Dolibarr API aktivieren**
+1. Dolibarr Admin Login
+2. **Home → Setup → Modules**
+3. **"Web Services API REST (developer)"** aktivieren
+4. **Home → Setup → API/Web services**
+5. **Neuen API Key generieren**
 
-Create a `.env` file with your Dolibarr credentials:
-
+### 2. **Konfiguration (.env)**
 ```env
-# Dolibarr API Configuration
-DOLIBARR_URL=https://your-dolibarr-instance.com/api/index.php
-DOLIBARR_API_KEY=your_api_key_here
-
-# Logging Configuration
+DOLIBARR_URL=https://ihre-dolibarr-instanz.com/api/index.php
+DOLIBARR_API_KEY=ihr_dolibarr_api_schluessel
 LOG_LEVEL=INFO
 ```
 
-### Testing the Installation
+## 🧪 Server testen
 
-Run the comprehensive test suite to verify everything is working:
+```cmd
+# Nach dem Setup:
+.\run_standalone.bat
+
+# Interactive Mode startet automatisch:
+dolibarr-mcp> test test_connection
+dolibarr-mcp> test get_status
+dolibarr-mcp> test get_users
+dolibarr-mcp> list
+dolibarr-mcp> exit
+```
+
+## 📋 Verfügbare Tools
+
+| Kategorie | Tools | Beschreibung |
+|-----------|-------|-------------|
+| **System** | `test_connection`, `get_status` | API-Status und Verbindung |
+| **Users** | `get_users`, `create_user`, `update_user`, `delete_user` | Benutzerverwaltung |
+| **Customers** | `get_customers`, `create_customer`, `update_customer`, `delete_customer` | Kundenverwaltung |
+| **Products** | `get_products`, `create_product`, `update_product`, `delete_product` | Produktverwaltung |
+| **Invoices** | `get_invoices`, `create_invoice`, `update_invoice`, `delete_invoice` | Rechnungsverwaltung |
+| **Orders** | `get_orders`, `create_order`, `update_order`, `delete_order` | Bestellverwaltung |
+| **Contacts** | `get_contacts`, `create_contact`, `update_contact`, `delete_contact` | Kontaktverwaltung |
+| **Advanced** | `dolibarr_raw_api` | Roher API-Zugriff |
+
+## 🐳 Docker Support
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  dolibarr-mcp:
+    build: .
+    environment:
+      - DOLIBARR_URL=https://ihre-instanz.com/api/index.php
+      - DOLIBARR_API_KEY=ihr_schluessel
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+```
 
 ```bash
-# With Python
-python test_dolibarr_mcp.py
-
-# With Docker
-docker-compose --profile test up dolibarr-mcp-test
-```
-
-## 🔌 Connecting to AI Assistants
-
-### Claude Desktop Configuration
-
-Add to your Claude Desktop configuration:
-
-```json
-{
-  "mcpServers": {
-    "dolibarr": {
-      "command": "python",
-      "args": ["-m", "dolibarr_mcp"],
-      "cwd": "/path/to/dolibarr-mcp",
-      "env": {
-        "DOLIBARR_URL": "https://your-dolibarr-instance.com/api/index.php",
-        "DOLIBARR_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
-```
-
-## 📚 Available Tools
-
-### Customer Management
-- `get_customers` - List all customers
-- `get_customer_by_id` - Get specific customer details
-- `create_customer` - Create new customer
-- `update_customer` - Update customer information
-- `delete_customer` - Remove customer
-
-### Product Management
-- `get_products` - List all products
-- `get_product_by_id` - Get product details
-- `create_product` - Add new product
-- `update_product` - Modify product
-- `delete_product` - Remove product
-
-### Invoice Management
-- `get_invoices` - List invoices
-- `get_invoice_by_id` - Get invoice details
-- `create_invoice` - Create new invoice
-- `update_invoice` - Update invoice
-- `delete_invoice` - Delete invoice
-
-### Order Management
-- `get_orders` - List orders
-- `get_order_by_id` - Get order details
-- `create_order` - Create new order
-- `update_order` - Update order
-- `delete_order` - Delete order
-
-### User Management
-- `get_users` - List users
-- `get_user_by_id` - Get user details
-- `create_user` - Create new user
-- `update_user` - Update user
-- `delete_user` - Delete user
-
-### Contact Management
-- `get_contacts` - List contacts
-- `get_contact_by_id` - Get contact details
-- `create_contact` - Create new contact
-- `update_contact` - Update contact
-- `delete_contact` - Delete contact
-
-### System Tools
-- `test_connection` - Test API connectivity
-- `get_status` - Get system status
-- `dolibarr_raw_api` - Direct API access
-
-## 💬 Example Usage with AI Assistant
-
-Once connected, you can interact with your Dolibarr system using natural language:
-
-```
-User: "Create a new customer called 'Tech Innovations Ltd' with email tech@innovations.com"
-Assistant: I'll create that customer for you in Dolibarr...
-[Customer created successfully with ID: 1234]
-
-User: "Show me all invoices from last month"
-Assistant: Let me fetch the invoices for you...
-[Lists invoices with details]
-
-User: "Create a product called 'Premium Software License' priced at $299"
-Assistant: I'll add that product to your catalog...
-[Product created successfully]
-```
-
-## 🐳 Docker Deployment
-
-### Build the Docker Image
-
-```bash
-docker build -t dolibarr-mcp:latest .
-```
-
-### Run with Docker Compose
-
-```bash
+# Starten
 docker-compose up -d
+
+# Logs anzeigen
+docker-compose logs -f dolibarr-mcp
 ```
 
-### Run Tests in Docker
+## 🔧 Troubleshooting
 
-```bash
-docker-compose --profile test up dolibarr-mcp-test
+### Windows pywin32 Probleme
+
+**Symptom**: 
+```
+[WinError 5] Zugriff verweigert: '...pywin32_system32\pywintypes313.dll'
 ```
 
-## 🛠️ Troubleshooting
-
-### Common Issues and Solutions
-
-#### 1. "Multiple .egg-info directories found" Error
-
-**Problem**: Installation fails with assertion error about multiple egg-info directories.
-
-**Solution**:
-```bash
-# Windows
-cleanup.bat
-setup.bat
-
-# Linux/Mac
-rm -rf *.egg-info src/*.egg-info build/ dist/
-python setup.py
+**Lösung**:
+```cmd
+# Verwenden Sie die standalone Version:
+.\setup_standalone.bat
+.\run_standalone.bat
 ```
 
-#### 2. "ModuleNotFoundError: No module named 'dolibarr_mcp'"
+**Warum funktioniert das?**
+- ❌ Standard MCP-Paket benötigt pywin32 (Windows-Berechtigungen)
+- ✅ Standalone Version verwendet nur Standard-Python-Bibliotheken
+- ✅ Gleiche Funktionalität, keine Windows-Probleme
 
-**Problem**: Python cannot find the dolibarr_mcp module.
+### API-Verbindungsprobleme
 
-**Solution**:
-```bash
-# Ensure you're in the virtual environment
-# Windows:
-venv_dolibarr\Scripts\activate
-# Linux/Mac:
-source venv_dolibarr/bin/activate
+**Checkliste**:
+1. ✅ Dolibarr "Web Services API REST" Modul aktiviert?
+2. ✅ API Key in Dolibarr erstellt?
+3. ✅ .env Datei korrekt ausgefüllt?
+4. ✅ URL endet mit `/api/index.php`?
+5. ✅ Firewall/Network erlaubt Zugriff?
 
-# Reinstall in editable mode
-pip install -e .
+**Testen**:
+```cmd
+# Verbindung direkt testen
+.\run_standalone.bat
+dolibarr-mcp> test test_connection
 ```
 
-#### 3. API Connection Issues
+### Häufige Fehlermeldungen
 
-**Problem**: Cannot connect to Dolibarr API.
+| Fehler | Bedeutung | Lösung |
+|--------|-----------|--------|
+| "Cannot connect to Dolibarr API" | API nicht erreichbar | URL und Netzwerk prüfen |
+| "403 Forbidden" | API Key ungültig | Neuen API Key erstellen |
+| "Module not found" | Python Umgebung Problem | `setup_standalone.bat` erneut ausführen |
 
-**Solution**:
-- Verify your Dolibarr URL ends with `/api/index.php`
-- Check API key is valid in Dolibarr settings
-- Ensure API module is enabled in Dolibarr
-- Test connection: `python test_connection.py`
+## 📚 Erweiterte Nutzung
 
-#### 4. Virtual Environment Issues
+### Custom API Calls
 
-**Problem**: Virtual environment not working correctly.
-
-**Solution**:
-```bash
-# Remove and recreate
-# Windows:
-rmdir /s /q venv_dolibarr
-python -m venv venv_dolibarr
-venv_dolibarr\Scripts\activate
-pip install -r requirements.txt
-pip install -e .
+```cmd
+dolibarr-mcp> # Beispiel: Raw API Zugriff
+# {"method": "GET", "endpoint": "setup/modules"}
 ```
 
-## 🧪 Development
+### Batch Operations
 
-### Project Structure
-
-```
-dolibarr-mcp/
-├── src/
-│   └── dolibarr_mcp/
-│       ├── __init__.py
-│       ├── __main__.py
-│       ├── config.py
-│       ├── dolibarr_client.py
-│       ├── dolibarr_mcp_server.py
-│       └── cli.py
-├── tests/
-├── Dockerfile
-├── docker-compose.yml
-├── pyproject.toml
-├── requirements.txt
-├── setup.py
-├── setup.bat          # Windows setup script
-├── cleanup.bat        # Windows cleanup script
-└── README.md
+```python
+# Beispiel: Alle Kunden abrufen
+async def get_all_customers():
+    result = await server.handle_tool_call("get_customers", {"limit": 100})
+    return result
 ```
 
-### Running Tests
+## 🤝 Support & Contributing
 
-```bash
-# Run the comprehensive test suite
-python test_dolibarr_mcp.py
-
-# Run with pytest (if installed)
-pytest tests/
-```
+- 🐛 **Issues**: [GitHub Issues](https://github.com/latinogino/dolibarr-mcp/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/latinogino/dolibarr-mcp/discussions)
+- 📖 **Wiki**: [Project Wiki](https://github.com/latinogino/dolibarr-mcp/wiki)
 
 ### Contributing
+1. Fork das Repository
+2. Feature Branch: `git checkout -b feature/neue-funktion`
+3. Commit: `git commit -am 'Neue Funktion'`
+4. Push: `git push origin feature/neue-funktion`
+5. Pull Request erstellen
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 📄 License
 
-## 📋 Requirements
-
-- Python 3.8+
-- Dependencies (automatically installed):
-  - mcp>=1.0.0
-  - aiohttp>=3.9.0
-  - python-dotenv>=1.0.0
-  - pydantic>=2.5.0
-  - click>=8.1.0
-
-## 🔐 Security Considerations
-
-- Always use HTTPS for your Dolibarr instance
-- Keep your API keys secure and never commit them to version control
-- Use environment variables for sensitive configuration
-- Regularly update dependencies for security patches
-- Consider using Docker secrets for production deployments
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🤝 Support
-
-- **Issues**: [GitHub Issues](https://github.com/latinogino/dolibarr-mcp/issues)
-- **Documentation**: [Wiki](https://github.com/latinogino/dolibarr-mcp/wiki)
-- **Dolibarr Documentation**: [Official Dolibarr Docs](https://wiki.dolibarr.org/)
-
-## 🙏 Acknowledgments
-
-- [Anthropic](https://www.anthropic.com/) for the MCP protocol
-- [Dolibarr](https://www.dolibarr.org/) community for the excellent ERP system
-- Contributors and testers
-
-## 🚧 Roadmap
-
-- [ ] Advanced search and filtering capabilities
-- [ ] Bulk operations support
-- [ ] Webhook integration
-- [ ] Real-time notifications
-- [ ] Multi-language support
-- [ ] Advanced reporting tools
-- [ ] Custom field support
-- [ ] Module-specific tools (CRM, HRM, Project Management)
+MIT License - siehe [LICENSE](LICENSE)
 
 ---
 
-<div align="center">
-Made with ❤️ for the Dolibarr and AI community
-</div>
+## 🎉 Erfolgreich eingerichtet?
+
+Ihr Dolibarr MCP Server ist **production-ready** mit:
+
+✅ **Vollständige CRUD-Operationen** für alle Dolibarr-Module
+✅ **Windows-Kompatibilität** ohne pywin32-Probleme  
+✅ **Professional Error Handling** und Logging
+✅ **Docker Support** für Production
+✅ **Interactive Testing** für einfache Entwicklung
+
+**🚀 Bereit, Ihr Dolibarr ERP mit AI zu integrieren!**
