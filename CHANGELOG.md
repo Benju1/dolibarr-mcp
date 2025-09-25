@@ -1,102 +1,60 @@
 # Changelog
 
-All notable changes to the Dolibarr MCP Server project will be documented in this file.
+All notable changes to the Dolibarr MCP Server will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2025-09-24
+## [1.0.0] - 2024-01-26
 
-### 🔥 MAJOR FIX: Windows Compatibility
-- **FIXED**: Windows pywin32 permission issues that prevented installation
-- **ADDED**: Standalone server implementation that works WITHOUT MCP package
-- **ADDED**: `setup_standalone.bat` - Windows-optimized setup script  
-- **ADDED**: `run_standalone.bat` - Start standalone server
-- **ADDED**: `requirements-windows.txt` - pywin32-free dependencies
-- **ADDED**: `test_standalone.py` - Test script for standalone version
+### 🎯 Major Restructuring
 
-### ✨ New Features
-- **ADDED**: Interactive testing mode in standalone server
-- **ADDED**: Enhanced error handling with detailed API error messages
-- **ADDED**: Professional configuration validation with helpful setup guides
-- **ADDED**: Comprehensive German README (`README_DE.md`)
+This release represents a complete restructuring of the Dolibarr MCP Server to match the clean architecture of prestashop-mcp.
 
-### 🛠️ Improvements
-- **IMPROVED**: Setup process with multiple fallback options
-- **IMPROVED**: Error messages with actionable troubleshooting steps
-- **IMPROVED**: Documentation with Windows-specific troubleshooting
-- **IMPROVED**: Docker configuration with health checks and resource limits
+### Added
+- Professional README.md with comprehensive documentation
+- Structured test suite in `tests/` directory
+- Clean configuration management
+- Docker support for easy deployment
+- Comprehensive CRUD operations for all Dolibarr entities
 
-### 📋 Available Tools (Complete CRUD for all modules)
-- ✅ **System**: `test_connection`, `get_status`
-- ✅ **Users**: `get_users`, `get_user_by_id`, `create_user`, `update_user`, `delete_user`
-- ✅ **Customers**: `get_customers`, `get_customer_by_id`, `create_customer`, `update_customer`, `delete_customer` 
-- ✅ **Products**: `get_products`, `get_product_by_id`, `create_product`, `update_product`, `delete_product`
-- ✅ **Invoices**: `get_invoices`, `get_invoice_by_id`, `create_invoice`, `update_invoice`, `delete_invoice`
-- ✅ **Orders**: `get_orders`, `get_order_by_id`, `create_order`, `update_order`, `delete_order`
-- ✅ **Contacts**: `get_contacts`, `get_contact_by_id`, `create_contact`, `update_contact`, `delete_contact`
-- ✅ **Raw API**: `dolibarr_raw_api` - Direct access to any Dolibarr endpoint
+### Changed
+- Complete repository restructuring to match prestashop-mcp pattern
+- Simplified dependencies in requirements.txt
+- Cleaned up package structure in `src/dolibarr_mcp/`
+- Updated pyproject.toml with proper metadata
+- Streamlined .gitignore file
 
-### 🐳 Docker
-- **ADDED**: Multi-stage Dockerfile for optimized production builds
-- **ADDED**: docker-compose.yml with health checks
-- **ADDED**: Test service configuration for automated testing
+### Removed
+- All test scripts from root directory (moved to `tests/`)
+- Multiple batch files (consolidated functionality)
+- Alternative server implementations (simple_client, standalone_server, ultra_simple_server)
+- Redundant requirements files (kept only requirements.txt)
+- Unnecessary documentation files (CLAUDE_CONFIG.md, CONFIG_COMPATIBILITY.md, etc.)
+- API directory and contents
 
-### 📚 Documentation  
-- **ADDED**: Comprehensive setup instructions for Windows
-- **ADDED**: Troubleshooting guide for common issues
-- **ADDED**: API endpoint documentation and examples
-- **ADDED**: Contributing guidelines
+### Technical Improvements
+- Single, focused MCP server implementation
+- Clean separation of concerns
+- Better error handling
+- Improved logging
+- Async/await architecture throughout
 
-## [1.0.1] - 2025-09-23
+## [0.5.0] - 2024-01-20
 
-### Initial Release
-- **ADDED**: Complete Dolibarr API client with async/await
-- **ADDED**: MCP server implementation with 30+ tools
-- **ADDED**: Professional error handling and logging
-- **ADDED**: Docker support with production configuration
-- **ADDED**: Comprehensive test suite
-- **ADDED**: Configuration management with .env support
+### Added
+- Initial Dolibarr API integration
+- Basic CRUD operations for customers, products, invoices
+- MCP server implementation
+- Docker configuration
 
-### Core Features
-- Full CRUD operations for all major Dolibarr modules
-- Async HTTP client with proper connection handling  
-- Pydantic validation for type safety
-- Professional logging and error reporting
-- MCP 1.0 compliance for LLM integration
+## [0.1.0] - 2024-01-15
 
-### Supported Dolibarr Modules
-- User Management
-- Customer/Third Party Management  
-- Product Management
-- Invoice Management
-- Order Management
-- Contact Management
-- Raw API access for extensibility
+### Added
+- Initial project setup
+- Basic repository structure
+- License and documentation
 
 ---
 
-## Installation Summary
-
-### Windows Users (RECOMMENDED)
-```cmd
-.\setup_standalone.bat  # Avoids pywin32 issues
-.\run_standalone.bat    # Start server
-```
-
-### Linux/macOS Users  
-```bash
-./setup.sh
-python -m src.dolibarr_mcp
-```
-
-### Docker Users
-```bash
-docker-compose up -d
-```
-
-## Support
-
-- 🐛 Issues: [GitHub Issues](https://github.com/latinogino/dolibarr-mcp/issues)
-- 💡 Discussions: [GitHub Discussions](https://github.com/latinogino/dolibarr-mcp/discussions)
-- 📖 Wiki: [Project Wiki](https://github.com/latinogino/dolibarr-mcp/wiki)
+**Note**: This changelog focuses on the major restructuring in v1.0.0 to align with prestashop-mcp's clean architecture.
