@@ -1,12 +1,22 @@
-# Core dependencies
+# Core MCP dependencies
+mcp>=1.0.0
+
+# HTTP and async support
 requests>=2.31.0
+aiohttp>=3.9.0
+
+# Data validation and settings
+pydantic>=2.5.0
+pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 
-# MCP framework
-mcp>=0.9.0
-
-# Additional dependencies
-aiohttp>=3.9.0
-pydantic>=2.5.0
+# CLI support
 click>=8.1.0
+
+# Type hints
 typing-extensions>=4.8.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
