@@ -4,38 +4,42 @@ import os
 import sys
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
 
-class Config(BaseModel):
+class Config(BaseSettings):
     """Configuration for Dolibarr MCP Server."""
     
     dolibarr_url: str = Field(
         description="Dolibarr API URL",
-        default_factory=lambda: os.getenv("DOLIBARR_URL") or os.getenv("DOLIBARR_BASE_URL", "")
+        default=""
     )
     
-    api_key: str = Field(
+    dolibarr_api_key: str = Field(
         description="Dolibarr API key",
-        default_factory=lambda: os.getenv("DOLIBARR_API_KEY", "")
+        default=""
     )
     
     log_level: str = Field(
         description="Logging level",
-        default_factory=lambda: os.getenv("LOG_LEVEL", "INFO")
+        default="INFO"
     )
     
-    @validator('dolibarr_url')
-    def validate_dolibarr_url(cls, v):
+    @field_validator('dolibarr_url')
+    @classmethod
+    def validate_dolibarr_url(cls, v: str) -> str:
         """Validate Dolibarr URL."""
         if not v:
-            # Print warning but don't fail
-            print("⚠️ DOLIBARR_URL/DOLIBARR_BASE_URL not configured - API calls will fail", file=sys.stderr)
-            return "https://your-dolibarr-instance.com/api/index.php"
+            v = os.getenv("DOLIBARR_URL") or os.getenv("DOLIBARR_BASE_URL", "")
+            if not v:
+                # Print warning but don't fail
+                print("⚠️ DOLIBARR_URL/DOLIBARR_BASE_URL not configured - API calls will fail", file=sys.stderr)
+                return "https://your-dolibarr-instance.com/api/index.php"
         
         if not v.startswith(('http://', 'https://')):
             raise ValueError("DOLIBARR_URL must start with http:// or https://")
@@ -60,38 +64,50 @@ class Config(BaseModel):
                 
         return v
     
-    @validator('api_key')
-    def validate_api_key(cls, v):
+    @field_validator('dolibarr_api_key')
+    @classmethod
+    def validate_api_key(cls, v: str) -> str:
         """Validate API key."""
         if not v:
-            # Print warning but don't fail
-            print("⚠️ DOLIBARR_API_KEY not configured - API authentication will fail", file=sys.stderr)
-            print("📝 Please set DOLIBARR_API_KEY in your .env file or Claude configuration", file=sys.stderr)
-            return "placeholder_api_key"
+            v = os.getenv("DOLIBARR_API_KEY", "")
+            if not v:
+                # Print warning but don't fail
+                print("⚠️ DOLIBARR_API_KEY not configured - API authentication will fail", file=sys.stderr)
+                print("📝 Please set DOLIBARR_API_KEY in your .env file or Claude configuration", file=sys.stderr)
+                return "placeholder_api_key"
         
         if v == "your_dolibarr_api_key_here":
             print("⚠️ Using placeholder API key - please configure a real API key", file=sys.stderr)
             
         return v
     
-    @validator('log_level')
-    def validate_log_level(cls, v):
+    @field_validator('log_level')
+    @classmethod
+    def validate_log_level(cls, v: str) -> str:
         """Validate log level."""
+        if not v:
+            v = os.getenv("LOG_LEVEL", "INFO")
+        
         valid_levels = {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}
         if v.upper() not in valid_levels:
-            raise ValueError(f"LOG_LEVEL must be one of: {', '.join(valid_levels)}")
+            print(f"⚠️ Invalid LOG_LEVEL '{v}', using INFO", file=sys.stderr)
+            return 'INFO'
         return v.upper()
     
     @classmethod
     def from_env(cls) -> "Config":
         """Create configuration from environment variables with validation."""
         try:
-            config = cls()
+            config = cls(
+                dolibarr_url=os.getenv("DOLIBARR_URL") or os.getenv("DOLIBARR_BASE_URL", ""),
+                dolibarr_api_key=os.getenv("DOLIBARR_API_KEY", ""),
+                log_level=os.getenv("LOG_LEVEL", "INFO")
+            )
             # Debug output for troubleshooting
             if os.getenv("DEBUG_CONFIG"):
                 print(f"✅ Config loaded:", file=sys.stderr)
                 print(f"   URL: {config.dolibarr_url}", file=sys.stderr)
-                print(f"   API Key: {'*' * 10 if config.api_key else 'NOT SET'}", file=sys.stderr)
+                print(f"   API Key: {'*' * 10 if config.dolibarr_api_key else 'NOT SET'}", file=sys.stderr)
             return config
         except Exception as e:
             print(f"❌ Configuration Error: {e}", file=sys.stderr)
@@ -112,7 +128,29 @@ class Config(BaseModel):
             print(file=sys.stderr)
             raise
     
-    class Settings:
-        """Pydantic settings configuration."""
+    # Alias for backward compatibility
+    @property
+    def api_key(self) -> str:
+        """Backward compatibility for api_key property."""
+        return self.dolibarr_api_key
+    
+    class Config:
+        """Pydantic configuration."""
         env_file = '.env'
         env_file_encoding = 'utf-8'
+        case_sensitive = False
+        # Load from environment
+        env_prefix = ""
+        
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings,
+            env_settings,
+            file_secret_settings
+        ):
+            return (
+                init_settings,
+                env_settings,
+                file_secret_settings,
+            )
