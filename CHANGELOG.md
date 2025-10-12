@@ -4,11 +4,16 @@ All notable changes to the Dolibarr MCP Server are documented here. The project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and adopts the
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
-## [Unreleased]
+### Added
+- Restored README.md and CHANGELOG.md after merge conflicts while preserving the streamlined structure shared with `prestashop-mcp`.
+- Documented platform-specific setup covering Linux/macOS shells, Windows Visual Studio `vsenv`, and the Docker workflow.
 
 ### Changed
-- Clarified the Windows (`vsenv`) workflow so Claude Desktop uses the correct virtual environment path and arguments.
-- Added a concrete Claude Desktop configuration example covering `DOLIBARR_URL`/`DOLIBARR_API_KEY` usage and JSON path formatting.
+- Reconciled feature and tool descriptions so they capture both the detailed ERP coverage and the new documentation bundle layout.
+- Clarified configuration guidance around `pydantic-settings`, environment variables, and `.env` files.
+
+### Removed
+- Obsolete references to legacy helper scripts and superseded documentation variants that were dropped during the repository cleanup.
 
 ## [1.1.0] - 2024-05-22
 
@@ -20,6 +25,17 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and adopts th
 ### Changed
 - Rewrote the README to highlight the streamlined structure and provide concise installation/run instructions.
 - Clarified that `dolibarr_mcp_server.py` is the definitive MCP entry point.
+
+## [1.1.0] - 2024-05-22
+
+### Removed
+- Legacy helper scripts, installers and manual test programs that duplicated the automated test-suite
+- Alternative server implementations (`simple_client`, `standalone_server`, `ultra_simple_server`) in favour of the single `dolibarr_mcp_server`
+- Redundant documentation fragments and variant requirements files that no longer reflected the current project layout
+
+### Changed
+- Rewrote the README to highlight the streamlined structure and provide concise installation/run instructions
+- Clarified that `dolibarr_mcp_server.py` is the definitive MCP entry point
 
 ## [1.0.0] - 2024-01-26
 

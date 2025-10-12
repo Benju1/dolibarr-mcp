@@ -6,7 +6,11 @@ the clean layout used by [`prestashop-mcp`](https://github.com/latinogino/presta
 a single production-ready server implementation, an async HTTP client, and a
 self-contained documentation bundle.
 
-## 🚀 Overview
+
+This MCP server enables complete management of your Dolibarr ERP/CRM through AI
+tools such as Claude Desktop. With specialised tools you can manage customers,
+products, invoices, orders, contacts, and system administration tasks from a
+single MCP endpoint.
 
 This MCP server enables complete management of your Dolibarr ERP/CRM through AI
 tools such as Claude Desktop. With specialised tools you can manage customers,
@@ -121,29 +125,7 @@ Add an entry to `claude_desktop_config.json` that points to your virtual
 environment’s Python executable and the `dolibarr_mcp.cli` module. After
 installation, verify the executable path with `which python` (Linux/macOS) or
 `where python` (Windows `vsenv`). Restart Claude Desktop so it picks up the new
-MCP server. A working Windows configuration looks like this:
-
-```json
-{
-  "dolibarr-python": {
-    "command": "C:/Users/you/GitHub/dolibarr-mcp/.venv/Scripts/python.exe",
-    "args": [
-      "-m",
-      "dolibarr_mcp.cli",
-      "serve"
-    ],
-    "cwd": "C:/Users/you/GitHub/dolibarr-mcp",
-    "env": {
-      "DOLIBARR_URL": "https://your-dolibarr.example.com/api/index.php",
-      "DOLIBARR_API_KEY": "your_api_key"
-    }
-  }
-}
-```
-
-Use forward slashes in the JSON path or escape backslashes, and keep the
-`command` value synchronized with the output of `where python` while the `.venv`
-is activated.
+MCP server.
 
 ## 🧪 Development workflow
 
@@ -153,6 +135,21 @@ is activated.
   console entry point.
 - Contributions follow the same structure and documentation conventions as
   `prestashop-mcp` to keep the twin projects in sync.
+
+```bash
+python -m dolibarr_mcp.cli test --url https://your-dolibarr.example.com/api/index.php --api-key YOUR_KEY
+```
+
+## Available tools
+
+- **System** – `test_connection`, `get_status`
+- **Users** – `get_users`, `get_user_by_id`, `create_user`, `update_user`, `delete_user`
+- **Customers / Third parties** – `get_customers`, `get_customer_by_id`, `create_customer`, `update_customer`, `delete_customer`
+- **Products** – `get_products`, `get_product_by_id`, `create_product`, `update_product`, `delete_product`
+- **Invoices** – `get_invoices`, `get_invoice_by_id`, `create_invoice`, `update_invoice`, `delete_invoice`
+- **Orders** – `get_orders`, `get_order_by_id`, `create_order`, `update_order`, `delete_order`
+- **Contacts** – `get_contacts`, `get_contact_by_id`, `create_contact`, `update_contact`, `delete_contact`
+- **Raw API access** – `dolibarr_raw_api`
 
 ## 📄 License
 
