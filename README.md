@@ -1,387 +1,100 @@
 # Dolibarr MCP Server
 
-A professional Model Context Protocol (MCP) Server for complete management of Dolibarr ERP/CRM systems.
+Dolibarr MCP is a lean Model Context Protocol (MCP) server that surfaces the most
+useful Dolibarr ERP/CRM operations to AI copilots. The repository now mirrors the
+clean layout of [`prestashop-mcp`](https://github.com/latinogino/prestashop-mcp):
+a single production-ready server, a concise async HTTP client, and a
+self-contained documentation bundle.
 
-## 🚀 Overview
+## Documentation
 
-This MCP Server enables complete management of your Dolibarr ERP/CRM through AI applications like Claude Desktop. With specialized tools, you can manage all aspects of your business - from customers and products to invoices, orders, and contacts.
+All user and contributor guides live in [`docs/`](docs/README.md):
 
-## ✨ Features
+- [Quickstart](docs/quickstart.md) – installation and first run instructions for Linux, macOS, and Windows
+- [Configuration](docs/configuration.md) – environment variables and secrets consumed by the server
+- [Development](docs/development.md) – test workflow, linting, and Docker helpers
+- [API Reference](docs/api-reference.md) – Dolibarr REST resources and corresponding MCP tools
 
-- **💼 Complete ERP/CRM Management** - Tools for all business areas
-- **👥 Customer & Contact Management** - Full CRM functionality
-- **📦 Product & Service Management** - Complete inventory control
-- **💰 Financial Management** - Invoices, orders, and payments
-- **🏗️ MCP Protocol Compliance** for seamless AI integration
-- **⚡ Async/Await Architecture** for maximum performance
-- **🛡️ Comprehensive Error Handling** and validation
-- **🔧 Production-Ready** with complete test suite
-- **🐳 Docker Support** for easy deployment
+## Repository layout
 
-## 🛠️ Available Tools
+| Path | Purpose |
+| --- | --- |
+| `src/dolibarr_mcp/` | MCP server implementation, async Dolibarr client, configuration helpers, and CLI entry point |
+| `tests/` | Pytest-based automated test-suite covering configuration, client behaviour, and MCP tool registration |
+| `docs/` | Markdown documentation mirroring the structure used by `prestashop-mcp` |
+| `docker/` | Optional container assets for local experimentation or deployment |
 
-### 👥 Customer Management (Third Parties)
-- `get_customers` - Retrieve and filter customers
-- `get_customer_by_id` - Get specific customer details
-- `create_customer` - Create new customers
-- `update_customer` - Edit customer data
-- `delete_customer` - Remove customers
+## Installation
 
-### 📦 Product Management
-- `get_products` - List all products
-- `get_product_by_id` - Get specific product details
-- `create_product` - Create new products/services
-- `update_product` - Edit product information
-- `delete_product` - Remove products
+### Linux / macOS
 
-### 💰 Invoice Management
-- `get_invoices` - Retrieve and filter invoices
-- `get_invoice_by_id` - Get specific invoice details
-- `create_invoice` - Create new invoices
-- `update_invoice` - Edit invoice information
-- `delete_invoice` - Remove invoices
-
-### 📋 Order Management
-- `get_orders` - Retrieve and filter orders
-- `get_order_by_id` - Get specific order details
-- `create_order` - Create new orders
-- `update_order` - Edit order information
-- `delete_order` - Remove orders
-
-### 👤 Contact Management
-- `get_contacts` - List all contacts
-- `get_contact_by_id` - Get specific contact details
-- `create_contact` - Create new contacts
-- `update_contact` - Edit contact information
-- `delete_contact` - Remove contacts
-
-### 👤 User Management
-- `get_users` - List system users
-- `get_user_by_id` - Get specific user details
-- `create_user` - Create new users
-- `update_user` - Edit user information
-- `delete_user` - Remove users
-
-### ⚙️ System Administration
-- `test_connection` - Test API connection
-- `get_status` - System status and version
-- `dolibarr_raw_api` - Direct API access for advanced operations
-
-## 📋 Installation
-
-### ⚠️ Recommended Installation (Virtual Environment)
-
-**This approach prevents module conflicts and ensures reliable installation:**
-
-#### Windows:
-```powershell
-# Clone repository
+```bash
 git clone https://github.com/latinogino/dolibarr-mcp.git
 cd dolibarr-mcp
-
-# Create virtual environment
-python -m venv venv_dolibarr
-
-# Activate virtual environment
-.\venv_dolibarr\Scripts\Activate.ps1
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install package in development mode
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e .
-
-# Verify installation
-python -c "import dolibarr_mcp; print('✅ Installation successful')"
-
-# Note the Python path for Claude Desktop configuration
-Write-Host "Python Path: $((Get-Command python).Source)"
 ```
 
-#### Linux/macOS:
-```bash
-# Clone repository
-git clone https://github.com/latinogino/dolibarr-mcp.git
-cd dolibarr-mcp
-
-# Create virtual environment
-python3 -m venv venv_dolibarr
-
-# Activate virtual environment
-source venv_dolibarr/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install package in development mode
-pip install -e .
-
-# Verify installation
-python -c "import dolibarr_mcp; print('✅ Installation successful')"
-
-# Note the Python path for Claude Desktop configuration
-which python
-```
-
-### 🐳 Docker Installation
+Install development extras (pytest, formatting, type-checking) when needed:
 
 ```bash
-# Using Docker Compose (recommended)
-docker-compose up -d
-
-# Or using Docker directly
-docker build -t dolibarr-mcp .
-docker run -d \
-  -e DOLIBARR_URL=https://your-dolibarr.com \
-  -e DOLIBARR_API_KEY=your_api_key \
-  -p 8080:8080 \
-  dolibarr-mcp
+pip install -e '.[dev]'
 ```
 
-### ⚙️ Configuration
+### Windows (Visual Studio `vsenv`)
 
-Create a `.env` file based on `.env.example`:
+1. Launch the **x64 Native Tools Command Prompt for VS** or **Developer PowerShell for VS** (`vsenv`).
+2. Create a virtual environment: `py -3 -m venv .venv`.
+3. Activate it: `call .venv\\Scripts\\activate.bat` (Command Prompt) or `.\.venv\\Scripts\\Activate.ps1` (PowerShell).
+4. Install the package: `pip install -e .`.
+5. Install development extras when required: `pip install -e .[dev]` (PowerShell requires escaping brackets: ``pip install -e .`[dev`]``).
+
+## Configuration
+
+Set the following environment variables (they may live in a `.env` file):
+
+- `DOLIBARR_URL` – Dolibarr API endpoint, e.g. `https://example.com/api/index.php`
+- `DOLIBARR_API_KEY` – personal Dolibarr API token
+- `LOG_LEVEL` – optional logging verbosity (defaults to `INFO`)
+
+[`Config`](src/dolibarr_mcp/config.py) is built with `pydantic-settings` and supports loading from the environment, `.env` files, and CLI overrides. See the [configuration guide](docs/configuration.md) for a full matrix and troubleshooting tips.
+
+## Running the server
+
+Dolibarr MCP communicates with hosts over STDIO. Once configured, launch the server with:
 
 ```bash
-# Dolibarr Configuration
-DOLIBARR_URL=https://your-dolibarr.example.com
-DOLIBARR_API_KEY=YOUR_API_KEY
-
-# Logging
-LOG_LEVEL=INFO
+python -m dolibarr_mcp.cli serve
 ```
 
-## 🎯 Usage
-
-### 🤖 With Claude Desktop
-
-#### Using Virtual Environment (Recommended)
-
-Add this configuration to `claude_desktop_config.json`:
-
-**Windows:**
-```json
-{
-  "mcpServers": {
-    "dolibarr": {
-      "command": "C:\\\\path\\\\to\\\\dolibarr-mcp\\\\venv_dolibarr\\\\Scripts\\\\python.exe",
-      "args": ["-m", "dolibarr_mcp.dolibarr_mcp_server"],
-      "cwd": "C:\\\\path\\\\to\\\\dolibarr-mcp",
-      "env": {
-        "DOLIBARR_URL": "https://your-dolibarr.example.com",
-        "DOLIBARR_API_KEY": "YOUR_API_KEY"
-      }
-    }
-  }
-}
-```
-
-**Linux/macOS:**
-```json
-{
-  "mcpServers": {
-    "dolibarr": {
-      "command": "/path/to/dolibarr-mcp/venv_dolibarr/bin/python",
-      "args": ["-m", "dolibarr_mcp.dolibarr_mcp_server"],
-      "cwd": "/path/to/dolibarr-mcp",
-      "env": {
-        "DOLIBARR_URL": "https://your-dolibarr.example.com",
-        "DOLIBARR_API_KEY": "YOUR_API_KEY"
-      }
-    }
-  }
-}
-```
-
-### 💻 CLI Usage
+You can validate credentials and connectivity using the built-in test command before wiring it into a host:
 
 ```bash
-# Activate virtual environment first (if using venv)
-source venv_dolibarr/bin/activate  # Linux/macOS
-.\venv_dolibarr\Scripts\Activate.ps1  # Windows
-
-# With environment variables
-dolibarr-mcp
-
-# With direct parameters
-dolibarr-mcp --url https://your-dolibarr.com --api-key YOUR_API_KEY
-
-# Debug mode
-dolibarr-mcp --log-level DEBUG
+python -m dolibarr_mcp.cli test --url https://example.com/api/index.php --api-key YOUR_TOKEN
 ```
 
-## 💡 Example Usage
+## Available tools
 
-### Customer Management
-```
-"Show me all customers in Dolibarr"
-"Create a new customer named 'Acme Corp' with email info@acme.com"
-"Update customer ID 5 with new phone number +1234567890"
-"Find customers in France"
-```
+`dolibarr_mcp_server` registers MCP tools that map to common Dolibarr workflows:
 
-### Product Management
-```
-"List all products with stock levels"
-"Create a new product 'Consulting Service' with price $150"
-"Update product ID 10 to set new price $200"
-"Show me products with low stock"
-```
+- **System** – `test_connection`, `get_status`
+- **Users** – CRUD helpers for Dolibarr users
+- **Customers / Third Parties** – CRUD helpers for partners
+- **Products** – CRUD helpers for product catalogue entries
+- **Invoices** – CRUD helpers for invoices
+- **Orders** – CRUD helpers for customer orders
+- **Contacts** – CRUD helpers for contact records
+- **Raw API access** – `dolibarr_raw_api` for direct REST operations
 
-### Invoice Management
-```
-"Show all unpaid invoices"
-"Create an invoice for customer 'Acme Corp'"
-"Get invoice details for invoice ID 100"
-"Update invoice due date to next month"
-```
+The async implementation in [`dolibarr_client.py`](src/dolibarr_mcp/dolibarr_client.py) handles request signing, pagination, and error handling. The [API reference](docs/api-reference.md) summarises the exposed REST coverage.
 
-### Contact Management
-```
-"List all contacts for customer ID 5"
-"Create a new contact John Doe for Acme Corp"
-"Update contact email for John Doe"
-"Find all contacts with role 'Manager'"
-```
+## Development workflow
 
-## 🔧 Troubleshooting
+- Run the test-suite with `pytest` (see [development docs](docs/development.md) for coverage flags and Docker helpers).
+- Editable installs rely on the `src/` layout and expose the `dolibarr-mcp` console entry point.
+- Contributions follow the same structure and documentation conventions as `prestashop-mcp` to keep the twin projects in sync.
 
-### ❌ Common Issues
+## License
 
-#### "ModuleNotFoundError: No module named 'dolibarr_mcp'"
-
-**Solution:** Use virtual environment and ensure package is installed:
-```bash
-# Check if in virtual environment
-python -c "import sys; print(sys.prefix)"
-
-# Reinstall package
-pip install -e .
-
-# Verify installation
-python -c "import dolibarr_mcp; print('Module found')"
-```
-
-#### API Connection Issues
-
-**Check API Configuration:**
-```bash
-# Test connection with curl
-curl -X GET "https://your-dolibarr.com/api/index.php/status" \
-  -H "DOLAPIKEY: YOUR_API_KEY"
-```
-
-#### Permission Errors
-
-Ensure your API key has necessary permissions in Dolibarr:
-1. Go to Dolibarr Admin → API/Web Services
-2. Check API key permissions
-3. Enable required modules (API REST module)
-
-### 🔍 Debug Mode
-
-Enable debug logging in Claude Desktop configuration:
-```json
-{
-  "mcpServers": {
-    "dolibarr": {
-      "command": "path/to/python",
-      "args": ["-m", "dolibarr_mcp.dolibarr_mcp_server"],
-      "cwd": "path/to/dolibarr-mcp",
-      "env": {
-        "DOLIBARR_URL": "https://your-dolibarr.example.com",
-        "DOLIBARR_API_KEY": "YOUR_API_KEY",
-        "LOG_LEVEL": "DEBUG"
-      }
-    }
-  }
-}
-```
-
-## 📊 Project Structure
-
-```
-dolibarr-mcp/
-├── src/dolibarr_mcp/              # Main Package
-│   ├── dolibarr_mcp_server.py     # MCP Server
-│   ├── dolibarr_client.py         # Dolibarr API Client
-│   ├── config.py                  # Configuration Management
-│   └── cli.py                     # Command Line Interface
-├── tests/                         # Test Suite
-│   ├── test_config.py             # Unit Tests
-│   └── test_dolibarr_client.py    # Integration Tests
-├── docker/                        # Docker Configuration
-│   ├── Dockerfile                 # Container Definition
-│   └── docker-compose.yml         # Compose Configuration
-├── venv_dolibarr/                 # Virtual Environment (after setup)
-├── README.md                      # Documentation
-├── CHANGELOG.md                   # Version History
-├── pyproject.toml                 # Package Configuration
-└── requirements.txt               # Dependencies
-```
-
-## 📖 API Documentation
-
-### Dolibarr API
-
-Complete Dolibarr API documentation:
-- **[Dolibarr REST API Wiki](https://wiki.dolibarr.org/index.php?title=Module_Web_Services_API_REST_(developer))**
-- **[Dolibarr Integration Guide](https://wiki.dolibarr.org/index.php?title=Interfaces_Dolibarr_toward_foreign_systems)**
-
-### Authentication
-
-```bash
-curl -X GET "https://your-dolibarr.com/api/index.php/status" \
-  -H "DOLAPIKEY: YOUR_API_KEY"
-```
-
-### Important Endpoints
-
-- **Third Parties**: `/api/index.php/thirdparties`
-- **Products**: `/api/index.php/products`
-- **Invoices**: `/api/index.php/invoices`
-- **Orders**: `/api/index.php/orders`
-- **Contacts**: `/api/index.php/contacts`
-- **Users**: `/api/index.php/users`
-- **Status**: `/api/index.php/status`
-
-## 🧪 Development
-
-### 🏗️ Development Environment
-
-```bash
-# Activate virtual environment
-source venv_dolibarr/bin/activate  # Linux/macOS
-.\venv_dolibarr\Scripts\Activate.ps1  # Windows
-
-# Install development dependencies
-pip install -r requirements.txt
-
-# Run tests
-pytest
-
-# Run tests with coverage
-pytest --cov=src/dolibarr_mcp --cov-report=html
-
-# Run integration tests
-python tests/test_dolibarr_client.py
-```
-
-## 📖 Resources
-
-- **[Dolibarr Official Documentation](https://www.dolibarr.org/documentation-home)**
-- **[Model Context Protocol Specification](https://modelcontextprotocol.io/)**
-- **[Claude Desktop MCP Integration](https://docs.anthropic.com/)**
-- **[GitHub Repository](https://github.com/latinogino/dolibarr-mcp)**
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## 📝 Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
-
----
-
-**🎯 Manage your complete Dolibarr ERP/CRM through natural language with Claude Desktop!**
+This project is released under the [MIT License](LICENSE).
