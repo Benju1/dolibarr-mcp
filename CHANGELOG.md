@@ -7,15 +7,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and adopts th
 ## [Unreleased]
 
 ### Added
-- Rebuilt README.md and changelog after the structural merge to keep parity with `prestashop-mcp` documentation.
-- Cross-platform setup guidance covering Linux/macOS shells and the Visual Studio `vsenv` workflow on Windows.
+- Restored README.md and CHANGELOG.md after merge conflicts while preserving the streamlined structure shared with `prestashop-mcp`.
+- Documented platform-specific setup covering Linux/macOS shells, Windows Visual Studio `vsenv`, and the Docker workflow.
 
 ### Changed
-- Reaffirmed the minimal repository layout (single server implementation, shared docs bundle, optional Docker assets).
-- Clarified how configuration is loaded through `pydantic-settings` and linked to the new documentation bundle.
+- Reconciled feature and tool descriptions so they capture both the detailed ERP coverage and the new documentation bundle layout.
+- Clarified configuration guidance around `pydantic-settings`, environment variables, and `.env` files.
 
 ### Removed
-- Stale references to deprecated helper scripts and legacy documentation variants.
+- Obsolete references to legacy helper scripts and superseded documentation variants that were dropped during the repository cleanup.
 
 ## [1.1.0] - 2024-05-22
 
