@@ -53,7 +53,7 @@ async def handle_list_tools():
         # Search Tools
         Tool(
             name="search_products_by_ref",
-            description="Search products by reference prefix (e.g. 'PRJ-123')",
+            description="Search products by (partial) reference. Use when a reference appears in text but is uncertain.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -66,7 +66,7 @@ async def handle_list_tools():
         ),
         Tool(
             name="search_customers",
-            description="Search customers by name or alias",
+            description="Search customers by name. Pay attention to exact matches (e.g. GmbH vs Inc).",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -92,7 +92,7 @@ async def handle_list_tools():
         ),
         Tool(
             name="resolve_product_ref",
-            description="Find exactly one product by reference. Returns status 'ok', 'not_found', or 'ambiguous'.",
+            description="Resolves an exact product reference (ref) to a product ID. Only use if the exact reference is known. Returns status 'ok', 'not_found', or 'ambiguous'.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -178,7 +178,7 @@ async def handle_list_tools():
         # Customer/Third Party Management CRUD
         Tool(
             name="get_customers",
-            description="Get list of customers/third parties from Dolibarr",
+            description="Get unfiltered list of customers/third parties from Dolibarr. DO NOT use to search by name (use `search_*` instead).",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -255,7 +255,7 @@ async def handle_list_tools():
         # Product Management CRUD
         Tool(
             name="get_products",
-            description="Get list of products from Dolibarr",
+            description="Get unfiltered list of products from Dolibarr. DO NOT use to search by name (use `search_*` instead).",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -346,7 +346,7 @@ async def handle_list_tools():
         ),
         Tool(
             name="create_invoice",
-            description="Create a new invoice",
+            description="ALWAYS creates a new invoice. Do not use for updates. For lines: Use `product_id` for existing products (search first!), free text only if necessary. Set `product_type=0` for products, `product_type=1` for services.",
             inputSchema={
                 "type": "object",
                 "properties": {
