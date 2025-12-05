@@ -21,6 +21,7 @@ implements for PrestaShop.
 | Resource        | Endpoint(s)                 | Tool group                              |
 | --------------- | --------------------------- | --------------------------------------- |
 | Status          | `GET /status`               | `get_status`, `test_connection`         |
+| Search          | `/products`, `/thirdparties`| `search_products_by_ref`, `search_customers`, `resolve_product_ref` |
 | Users           | `/users`                    | CRUD helpers under the *Users* group    |
 | Third parties   | `/thirdparties`             | Customer CRUD operations                |
 | Products        | `/products`                 | Product CRUD operations                 |
