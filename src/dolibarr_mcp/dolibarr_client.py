@@ -388,6 +388,11 @@ class DolibarrClient:
     ) -> Dict[str, Any]:
         """Create a new invoice."""
         payload = self._merge_payload(data, **kwargs)
+
+        # Fix: Map customer_id to socid
+        if "customer_id" in payload and "socid" not in payload:
+            payload["socid"] = payload.pop("customer_id")
+
         result = await self.request("POST", "invoices", data=payload)
         return self._extract_identifier(result)
 
