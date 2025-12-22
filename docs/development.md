@@ -1,6 +1,6 @@
 # Development
 
-This project uses the same lightweight tooling philosophy as `prestashop-mcp`.
+This project uses lightweight, professional tooling with a clean structure.
 The code lives under `src/`, tests under `tests/` and optional Docker assets are
 kept separate in `docker/`.
 

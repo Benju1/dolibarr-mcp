@@ -2,8 +2,7 @@
 
 This server wraps the Dolibarr REST API v21.0.1 that is exposed by an instance at
 `https://db.ginos.cloud/api/index.php`. The MCP tools use the following REST
-resources, mirroring the scope that the sibling `prestashop-mcp` project
-implements for PrestaShop.
+resources with comprehensive coverage of Dolibarr entities.
 
 ## Authentication and Conventions
 

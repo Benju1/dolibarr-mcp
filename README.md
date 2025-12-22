@@ -137,9 +137,6 @@ When the environment variables are already set, omit the overrides and run
   for coverage options and Docker helpers).
 - Editable installs rely on the `src/` layout and expose the `dolibarr-mcp`
   console entry point for backwards compatibility.
-- The repository structure, tooling, and docs intentionally mirror
-  [`prestashop-mcp`](https://github.com/latinogino/prestashop-mcp) to keep the
-  companion projects aligned.
 
 ## 📄 License
 

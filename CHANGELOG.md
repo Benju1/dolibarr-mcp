@@ -5,7 +5,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and adopts th
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ### Added
-- Restored README.md and CHANGELOG.md after merge conflicts while preserving the streamlined structure shared with `prestashop-mcp`.
+- Restored README.md and CHANGELOG.md after merge conflicts while preserving the streamlined structure.
 - Documented platform-specific setup covering Linux/macOS shells, Windows Visual Studio `vsenv`, and the Docker workflow.
 
 ### Changed
@@ -41,7 +41,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and adopts th
 
 ### 🎯 Major Restructuring
 
-This release represents a complete restructuring of the Dolibarr MCP Server to match the clean architecture of prestashop-mcp.
+This release represents a complete restructuring of the Dolibarr MCP Server with a clean, professional architecture.
 
 ### Added
 - Professional README.md with comprehensive documentation.
@@ -51,7 +51,7 @@ This release represents a complete restructuring of the Dolibarr MCP Server to m
 - Comprehensive CRUD operations for all Dolibarr entities.
 
 ### Changed
-- Complete repository restructuring to match prestashop-mcp pattern.
+- Complete repository restructuring with professional tooling and organization.
 - Simplified dependencies in requirements.txt.
 - Cleaned up package structure in `src/dolibarr_mcp/`.
 - Updated pyproject.toml with proper metadata.

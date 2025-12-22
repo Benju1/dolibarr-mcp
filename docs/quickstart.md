@@ -1,7 +1,6 @@
 # Quickstart
 
-Follow these steps to install and run the Dolibarr MCP server. The process
-mirrors the streamlined developer experience of the `prestashop-mcp` project.
+Follow these steps to install and run the Dolibarr MCP server.
 
 ## 1. Clone the repository
 
