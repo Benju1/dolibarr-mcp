@@ -112,10 +112,10 @@ async def search_projects(
     
     if query:
         query_sanitized = _sanitize_search(query)
-        filters.append(f"((t.ref:like:'%{query_sanitized}%') or (t.title:like:'%{query_sanitized}%'))")
+        filters.append(f"((t.ref=like:'%{query_sanitized}%') or (t.title=like:'%{query_sanitized}%'))")
     
     if filter_customer_id:
-        filters.append(f"(t.socid:{filter_customer_id})")
+        filters.append(f"(t.socid={filter_customer_id})")
     
     sqlfilters = " and ".join(filters) if filters else ""
     
@@ -408,7 +408,7 @@ async def get_contacts(
         
     sqlfilters = None
     if customer_id:
-        sqlfilters = f"(t.socid:eq:{customer_id})"
+        sqlfilters = f"(t.socid={customer_id})"
         
     result = await client.get_contacts(limit=limit, page=page, sqlfilters=sqlfilters)
     return [ContactResult(**item) for item in result]
@@ -644,7 +644,7 @@ async def search_products_by_ref(
     client = _require_client()
         
     ref_sanitized = _sanitize_search(ref_prefix)
-    sqlfilters = f"(t.ref:like:'{ref_sanitized}%')"
+    sqlfilters = f"(t.ref=like:'{ref_sanitized}%')"
     
     try:
         result = await client.search_products(sqlfilters=sqlfilters, limit=limit)
@@ -679,7 +679,7 @@ async def resolve_product_ref(
     client = _require_client()
         
     ref_sanitized = _sanitize_search(ref)
-    sqlfilters = f"(t.ref:eq:'{ref_sanitized}')"
+    sqlfilters = f"(t.ref={ref_sanitized})"
     
     try:
         products = await client.search_products(sqlfilters=sqlfilters, limit=2)
