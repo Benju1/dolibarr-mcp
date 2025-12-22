@@ -41,8 +41,8 @@ async def test_search_projects_tool():
         kwargs = mock_client.search_projects.call_args.kwargs
         
         assert kwargs["limit"] == 5
-        assert "(t.socid:10)" in kwargs["sqlfilters"]
-        assert "t.ref:like" in kwargs["sqlfilters"]
+        assert "(t.socid=10)" in kwargs["sqlfilters"]
+        assert "t.ref=like" in kwargs["sqlfilters"]
 
 @pytest.mark.asyncio
 async def test_get_customers_tool():
@@ -80,12 +80,12 @@ async def test_search_products_tool():
     """Test the search_products_by_ref tool."""
     # Mock client
     mock_client = AsyncMock()
-    mock_client.get_products.return_value = [
+    mock_client.search_products.return_value = [
         {
             "id": 10,
             "ref": "PROD-001",
             "label": "Test Product",
-            "type": "0",
+            "type": 0,
             "price": "100.00",
             "price_ttc": "120.00",
             "tva_tx": "20.00"
@@ -98,10 +98,10 @@ async def test_search_products_tool():
         result = await search_products_by_ref.fn(ref_prefix="PROD", limit=5)
         
         # Verify client call
-        mock_client.get_products.assert_called_once()
-        call_args = mock_client.get_products.call_args
+        mock_client.search_products.assert_called_once()
+        call_args = mock_client.search_products.call_args
         assert "sqlfilters" in call_args.kwargs
-        assert "(t.ref:like:'PROD%')" in call_args.kwargs["sqlfilters"]
+        assert "(t.ref=like:'PROD%')" in call_args.kwargs["sqlfilters"]
         assert call_args.kwargs["limit"] == 5
         
         # Verify result

@@ -1,12 +1,12 @@
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
 from dolibarr_mcp.dolibarr_client import DolibarrClient
 
 
 @pytest.mark.asyncio
 async def test_search_products_by_ref():
     """Test searching products by reference."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -24,7 +24,7 @@ async def test_search_products_by_ref():
 @pytest.mark.asyncio
 async def test_resolve_product_ref_exact():
     """Test resolving product by exact reference."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -41,7 +41,7 @@ async def test_resolve_product_ref_exact():
 @pytest.mark.asyncio
 async def test_resolve_product_ref_ambiguous():
     """Test resolving product with multiple matches."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -59,7 +59,7 @@ async def test_resolve_product_ref_ambiguous():
 @pytest.mark.asyncio
 async def test_search_customers():
     """Test searching customers."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:

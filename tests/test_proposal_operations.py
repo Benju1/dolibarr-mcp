@@ -1,7 +1,7 @@
 """Tests for proposal/quote operations."""
 
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
 from decimal import Decimal
 
 from dolibarr_mcp.models import ProposalResult
@@ -11,7 +11,7 @@ from dolibarr_mcp.dolibarr_client import DolibarrClient
 @pytest.mark.asyncio
 async def test_client_get_proposals():
     """Test client.get_proposals() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -40,7 +40,7 @@ async def test_client_get_proposals():
 @pytest.mark.asyncio
 async def test_client_get_proposals_with_filter():
     """Test client.get_proposals() with filters."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -78,7 +78,7 @@ async def test_client_get_proposals_with_filter():
 @pytest.mark.asyncio
 async def test_client_get_proposal_by_id():
     """Test client.get_proposal_by_id() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -170,7 +170,7 @@ async def test_proposal_result_model_extra_fields_ignored():
 @pytest.mark.asyncio
 async def test_client_create_proposal():
     """Test client.create_proposal() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -195,7 +195,7 @@ async def test_client_create_proposal():
 @pytest.mark.asyncio
 async def test_client_create_proposal_with_customer_id_mapping():
     """Test that customer_id is mapped to socid."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -214,7 +214,7 @@ async def test_client_create_proposal_with_customer_id_mapping():
 @pytest.mark.asyncio
 async def test_client_update_proposal():
     """Test client.update_proposal() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -233,7 +233,7 @@ async def test_client_update_proposal():
 @pytest.mark.asyncio
 async def test_client_delete_proposal():
     """Test client.delete_proposal() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -248,7 +248,7 @@ async def test_client_delete_proposal():
 @pytest.mark.asyncio
 async def test_client_add_proposal_line():
     """Test client.add_proposal_line() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -272,7 +272,7 @@ async def test_client_add_proposal_line():
 @pytest.mark.asyncio
 async def test_client_update_proposal_line():
     """Test client.update_proposal_line() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -292,7 +292,7 @@ async def test_client_update_proposal_line():
 @pytest.mark.asyncio
 async def test_client_delete_proposal_line():
     """Test client.delete_proposal_line() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -307,7 +307,7 @@ async def test_client_delete_proposal_line():
 @pytest.mark.asyncio
 async def test_client_validate_proposal():
     """Test client.validate_proposal() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
@@ -322,7 +322,7 @@ async def test_client_validate_proposal():
 @pytest.mark.asyncio
 async def test_client_convert_proposal_to_order():
     """Test client.convert_proposal_to_order() method."""
-    config_mock = AsyncMock()
+    config_mock = MagicMock()
     client = DolibarrClient(config_mock)
     
     with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
