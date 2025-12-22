@@ -353,8 +353,8 @@ class TestMCPServerIntegration:
             )
             
             # Import the server module to test initialization
-            from dolibarr_mcp import dolibarr_mcp_server
-            assert dolibarr_mcp_server.server is not None
+            from dolibarr_mcp import server
+            assert server.mcp is not None
     
     @pytest.mark.asyncio
     async def test_server_tool_execution(self):

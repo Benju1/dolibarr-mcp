@@ -53,10 +53,10 @@ async def server_lifespan(server: FastMCP):
         
         # Check if environment variables are set properly
         if not config.dolibarr_url or "your-dolibarr-instance" in config.dolibarr_url:
-            print("⚠️  Warning: DOLIBARR_URL not configured properly", file=sys.stderr)
+            raise RuntimeError("DOLIBARR_URL not configured properly")
         
         if not config.api_key or "your_dolibarr_api_key" in config.api_key:
-            print("⚠️  Warning: DOLIBARR_API_KEY not configured properly", file=sys.stderr)
+            raise RuntimeError("DOLIBARR_API_KEY not configured properly")
             
         # Initialize client
         client = DolibarrClient(config)
@@ -678,26 +678,26 @@ async def resolve_product_ref(
     """Resolve an exact product reference to a product ID."""
     client = _require_client()
         
+    ref_sanitized = _sanitize_search(ref)
+    sqlfilters = f"(t.ref:eq:'{ref_sanitized}')"
+    
     try:
         products = await client.search_products(sqlfilters=sqlfilters, limit=2)
     except DolibarrAPIError as e:
-        raise RuntimeError(f"Dolibarr API Error: {e.message}"
-    sqlfilters = f"(t.ref:eq:'{ref_sanitized}')"
-    
-    products = await client.search_products(sqlfilters=sqlfilters, limit=2)
+        raise RuntimeError(f"Dolibarr API Error: {e.message}") from e
     
     if not products:
-        return {"status": "not_found", "ref": ref}
+        return {"status": "not_found", "ref": ref_sanitized}
     elif len(products) > 1:
-        return {"status": "ambiguous", "ref": ref, "count": len(products)}
+        return {"status": "ambiguous", "ref": ref_sanitized, "count": len(products)}
     else:
         product = products[0]
         return {
             "status": "ok",
-            "product_id": product["id"],
-            "ref": product["ref"],
-            "label": product["label"],
-            "price": product["price"]
+            "product_id": product.get("id"),
+            "ref": product.get("ref"),
+            "label": product.get("label"),
+            "price": product.get("price")
         }
 
 

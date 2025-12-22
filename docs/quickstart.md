@@ -53,26 +53,26 @@ host application.
 ## 5. Run the server
 
 ```bash
-python -m dolibarr_mcp.dolibarr_mcp_server
+python -m dolibarr_mcp serve
 ```
 
 The command starts the STDIO based MCP server that Claude Desktop and other
 clients can communicate with. When wiring the server into Claude Desktop, set
 `command` to the path returned by `Get-Command python` (Windows PowerShell) or
 `which python` (Linux/macOS) while the virtual environment is activated, and use
-the arguments `-m dolibarr_mcp.dolibarr_mcp_server`.
+the arguments `-m dolibarr_mcp serve`.
 
 ## 6. (Optional) Test the connection
 
 Verify the credentials before integrating the server with Claude Desktop:
 
 ```bash
-python -m dolibarr_mcp.test_connection
+python -m dolibarr_mcp test
 ```
 
 Override the URL or API key directly when needed:
 
 ```bash
-python -m dolibarr_mcp.test_connection --url https://your-dolibarr.example.com/api/index.php --api-key YOUR_API_KEY
+python -m dolibarr_mcp test --url https://your-dolibarr.example.com/api/index.php --api-key YOUR_API_KEY
 ```
 

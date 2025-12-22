@@ -29,5 +29,5 @@ Use the standalone helper to verify that the credentials are accepted by
 Dolibarr before wiring the server into your MCP host:
 
 ```bash
-python -m dolibarr_mcp.test_connection --url https://your-dolibarr.example.com/api/index.php --api-key YOUR_KEY
+python -m dolibarr_mcp test --url https://your-dolibarr.example.com/api/index.php --api-key YOUR_KEY
 ```

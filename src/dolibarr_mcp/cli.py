@@ -33,11 +33,10 @@ def test(url: Optional[str], api_key: Optional[str]):
 @click.option("--port", default=8000, help="Port to bind to (HTTP only)")
 def serve(transport: str, host: str, port: int):
     """Start the Dolibarr MCP server."""
-    click.echo(f"🚀 Starting Dolibarr MCP server (Transport: {transport})")
     if transport == "http":
+        click.echo(f"🚀 Starting Dolibarr MCP server (Transport: {transport})")
         click.echo(f"📡 Listening on http://{host}:{port}")
-    
-    click.echo("🔧 Configure your environment variables in .env file")
+        click.echo("🔧 Configure your environment variables in .env file")
     
     # Run the FastMCP server
     mcp.run(transport=transport, host=host, port=port)
