@@ -32,37 +32,21 @@ configuration, API coverage, and contributor workflows.
 
 ## 📦 Installation
 
-### Linux / macOS
+### Using uv (Recommended)
+
+This project uses `uv` for dependency management.
 
 ```bash
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone the repository
 git clone https://github.com/latinogino/dolibarr-mcp.git
 cd dolibarr-mcp
-python3 -m venv venv_dolibarr
-source venv_dolibarr/bin/activate
-pip install -e .
-# Optional development extras
-pip install -e '.[dev]'
+
+# Install dependencies
+uv sync
 ```
-
-While the virtual environment is active record the Python executable path with
-`which python`. Claude Desktop must launch the MCP server using this interpreter.
-
-### Windows (PowerShell)
-
-```powershell
-git clone https://github.com/latinogino/dolibarr-mcp.git
-Set-Location dolibarr-mcp
-py -3 -m venv venv_dolibarr
-./venv_dolibarr/Scripts/Activate.ps1
-pip install -e .
-# Optional development extras (escape brackets in PowerShell)
-pip install -e .`[dev`]
-```
-
-Run `Get-Command python` (or `Get-Command python.exe`) while the environment is
-activated and note the absolute path. Claude Desktop should use this interpreter
-inside the virtual environment, for example
-`C:\\path\\to\\dolibarr-mcp\\venv_dolibarr\\Scripts\\python.exe`.
 
 ### Docker (optional)
 
@@ -106,9 +90,9 @@ credentials with your own values:
 {
   "mcpServers": {
     "dolibarr": {
-      "command": "C:\\path\\to\\dolibarr-mcp\\venv_dolibarr\\Scripts\\python.exe",
-      "args": ["-m", "dolibarr_mcp.dolibarr_mcp_server"],
-      "cwd": "C:\\path\\to\\dolibarr-mcp",
+      "command": "uv",
+      "args": ["run", "dolibarr-mcp", "serve"],
+      "cwd": "/absolute/path/to/dolibarr-mcp",
       "env": {
         "DOLIBARR_SHOP_URL": "https://your-dolibarr.example.com",
         "DOLIBARR_API_KEY": "YOUR_API_KEY"
@@ -118,33 +102,34 @@ credentials with your own values:
 }
 ```
 
-Restart Claude Desktop after saving the configuration. The MCP server reads the
-same environment variables when launched from Linux or macOS hosts.
+Restart Claude Desktop after saving the configuration.
 
 ## ▶️ Usage
 
 ### Start the MCP server
 
-The server communicates over STDIO, so run it in the foreground from the virtual
-environment:
+The server communicates over STDIO by default:
 
 ```bash
-python -m dolibarr_mcp.dolibarr_mcp_server
+uv run dolibarr-mcp serve
 ```
 
-Logs are written to stderr to avoid interfering with the MCP protocol. Keep the
-process running while Claude Desktop is active.
+You can also start an HTTP server (SSE):
+
+```bash
+uv run dolibarr-mcp serve --transport http --port 8000
+```
 
 ### Test the Dolibarr credentials
 
-Use the standalone connectivity check before wiring the server into an MCP host:
+Use the CLI to test connectivity:
 
 ```bash
-python -m dolibarr_mcp.test_connection --url https://your-dolibarr.example.com/api/index.php --api-key YOUR_API_KEY
+uv run dolibarr-mcp test --url https://your-dolibarr.example.com/api/index.php --api-key YOUR_API_KEY
 ```
 
 When the environment variables are already set, omit the overrides and run
-`python -m dolibarr_mcp.test_connection`.
+`uv run dolibarr-mcp test`.
 
 ## 🧪 Development
 

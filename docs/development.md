@@ -4,6 +4,8 @@ This project uses the same lightweight tooling philosophy as `prestashop-mcp`.
 The code lives under `src/`, tests under `tests/` and optional Docker assets are
 kept separate in `docker/`.
 
+For architectural details, see [Architecture Documentation](developer/architecture.md).
+
 ## Install development dependencies
 
 It is recommended to use a virtual environment to avoid conflicts with system packages (especially on Linux systems with externally managed environments).

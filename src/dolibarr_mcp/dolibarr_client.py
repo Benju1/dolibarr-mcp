@@ -342,9 +342,14 @@ class DolibarrClient:
         result = await self.request("GET", "products", params=params)
         return result if isinstance(result, list) else []
 
-    async def get_products(self, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_products(self, limit: int = 100, page: int = 0, category_id: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get list of products."""
         params = {"limit": limit}
+        if page > 0:
+            params["page"] = page
+        if category_id:
+            params["category"] = category_id
+            
         result = await self.request("GET", "products", params=params)
         return result if isinstance(result, list) else []
     
@@ -468,6 +473,10 @@ class DolibarrClient:
             "not_trigger": not_trigger
         }
         return await self.request("POST", f"invoices/{invoice_id}/validate", data=payload)
+
+    async def add_payment_to_invoice(self, invoice_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Add a payment to an invoice."""
+        return await self.request("POST", f"invoices/{invoice_id}/payments", data=data)
     
     # ============================================================================
     # ORDER MANAGEMENT

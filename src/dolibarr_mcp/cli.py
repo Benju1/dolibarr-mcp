@@ -6,7 +6,7 @@ from typing import Optional
 
 import click
 
-from .dolibarr_mcp_server import main as server_main
+from .server import mcp
 from .testing import test_connection as run_test_connection
 
 
@@ -28,16 +28,19 @@ def test(url: Optional[str], api_key: Optional[str]):
 
 
 @cli.command()
-@click.option("--host", default="localhost", help="Host to bind to")
-@click.option("--port", default=8080, help="Port to bind to") 
-def serve(host: str, port: int):
+@click.option("--transport", default="stdio", type=click.Choice(["stdio", "http"]), help="Transport protocol")
+@click.option("--host", default="0.0.0.0", help="Host to bind to (HTTP only)")
+@click.option("--port", default=8000, help="Port to bind to (HTTP only)")
+def serve(transport: str, host: str, port: int):
     """Start the Dolibarr MCP server."""
-    click.echo(f"🚀 Starting Dolibarr MCP server on {host}:{port}")
-    click.echo("📝 Use this server with MCP-compatible clients")
+    click.echo(f"🚀 Starting Dolibarr MCP server (Transport: {transport})")
+    if transport == "http":
+        click.echo(f"📡 Listening on http://{host}:{port}")
+    
     click.echo("🔧 Configure your environment variables in .env file")
     
-    # Run the MCP server
-    asyncio.run(server_main())
+    # Run the FastMCP server
+    mcp.run(transport=transport, host=host, port=port)
 
 
 @cli.command()
