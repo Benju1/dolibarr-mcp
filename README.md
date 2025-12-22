@@ -26,7 +26,7 @@ configuration, API coverage, and contributor workflows.
 
 ## ✅ Prerequisites
 
-- Python 3.8 or newer.
+- Python 3.10 or newer.
 - Access to a Dolibarr installation with the REST API enabled and a personal API
   token.
 
