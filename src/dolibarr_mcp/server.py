@@ -593,6 +593,94 @@ async def get_proposal_by_id(
     return ProposalResult(**result)
 
 
+@mcp.tool()
+async def create_proposal(
+    customer_id: int = Field(..., description="Customer ID (socid)"),
+    date: str = Field(..., description="Proposal date (YYYY-MM-DD)"),
+    lines: Optional[List[InvoiceLine]] = Field(None, description="Proposal lines"),
+    project_id: Optional[int] = Field(None, description="Project ID"),
+    payment_mode_id: Optional[int] = Field(None, description="Payment mode ID")
+) -> int:
+    """Create a new proposal (draft). Returns the proposal ID."""
+    client = _require_client()
+    
+    lines_data = []
+    if lines:
+        lines_data = [line.model_dump(exclude_none=True) for line in lines]
+    
+    payload = {
+        "socid": customer_id,
+        "date": date,
+        "lines": lines_data,
+        "statut": 0  # Draft status
+    }
+    
+    if project_id:
+        payload["fk_project"] = project_id
+    if payment_mode_id:
+        payload["mode_reglement_id"] = payment_mode_id
+    
+    return await client.create_proposal(payload)
+
+
+@mcp.tool()
+async def update_proposal(
+    proposal_id: int = Field(..., description="Proposal ID"),
+    date: Optional[str] = Field(None, description="Proposal date (YYYY-MM-DD)"),
+    payment_mode_id: Optional[int] = Field(None, description="Payment mode ID")
+) -> int:
+    """Update an existing proposal (draft only)."""
+    client = _require_client()
+    
+    payload = {}
+    if date:
+        payload["date"] = date
+    if payment_mode_id:
+        payload["mode_reglement_id"] = payment_mode_id
+    
+    if not payload:
+        return proposal_id
+    
+    await client.update_proposal(proposal_id, payload)
+    return proposal_id
+
+
+@mcp.tool()
+async def delete_proposal(
+    proposal_id: int = Field(..., description="Proposal ID to delete")
+) -> int:
+    """Delete a proposal (draft only)."""
+    client = _require_client()
+    
+    await client.delete_proposal(proposal_id)
+    return proposal_id
+
+
+@mcp.tool()
+async def validate_proposal(
+    proposal_id: int = Field(..., description="Proposal ID to validate")
+) -> int:
+    """Validate a draft proposal (transition to open/signed state)."""
+    client = _require_client()
+    
+    await client.validate_proposal(proposal_id)
+    return proposal_id
+
+
+@mcp.tool()
+async def convert_proposal_to_order(
+    proposal_id: int = Field(..., description="Proposal ID to convert")
+) -> int:
+    """Convert a validated proposal to a sales order."""
+    client = _require_client()
+    
+    result = await client.convert_proposal_to_order(proposal_id)
+    # Return the order ID if available, otherwise the proposal ID
+    if isinstance(result, dict) and "id" in result:
+        return result["id"]
+    return proposal_id
+
+
 
 
 # ============================================================================

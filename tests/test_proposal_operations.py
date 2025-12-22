@@ -165,3 +165,170 @@ async def test_proposal_result_model_extra_fields_ignored():
     # Should not raise an error
     result = ProposalResult(**data)
     assert result.id == 1
+
+
+@pytest.mark.asyncio
+async def test_client_create_proposal():
+    """Test client.create_proposal() method."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"id": 5, "ref": "PROP-005"}
+        
+        result = await client.create_proposal(
+            socid=1,
+            date="2024-01-15",
+            lines=[],
+            statut=0
+        )
+        
+        # _extract_identifier returns the ID
+        assert result == 5
+        
+        call_args = mock_request.call_args
+        assert call_args[0] == ("POST", "proposals")
+        assert call_args[1]["data"]["socid"] == 1
+        assert call_args[1]["data"]["date"] == "2024-01-15"
+
+
+@pytest.mark.asyncio
+async def test_client_create_proposal_with_customer_id_mapping():
+    """Test that customer_id is mapped to socid."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"id": 5}
+        
+        await client.create_proposal(
+            customer_id=2,  # Using customer_id instead of socid
+            date="2024-01-15"
+        )
+        
+        call_args = mock_request.call_args
+        assert call_args[1]["data"]["socid"] == 2
+        assert "customer_id" not in call_args[1]["data"]
+
+
+@pytest.mark.asyncio
+async def test_client_update_proposal():
+    """Test client.update_proposal() method."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"success": 1}
+        
+        result = await client.update_proposal(
+            proposal_id=5,
+            data={"date": "2024-01-20"}
+        )
+        
+        call_args = mock_request.call_args
+        assert call_args[0] == ("PUT", "proposals/5")
+        assert call_args[1]["data"]["date"] == "2024-01-20"
+
+
+@pytest.mark.asyncio
+async def test_client_delete_proposal():
+    """Test client.delete_proposal() method."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"success": 1}
+        
+        await client.delete_proposal(proposal_id=5)
+        
+        call_args = mock_request.call_args
+        assert call_args[0] == ("DELETE", "proposals/5")
+
+
+@pytest.mark.asyncio
+async def test_client_add_proposal_line():
+    """Test client.add_proposal_line() method."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"id": 10}
+        
+        await client.add_proposal_line(
+            proposal_id=5,
+            desc="Test Line",
+            qty=2,
+            subprice=Decimal("50.00"),
+            product_id=99
+        )
+        
+        call_args = mock_request.call_args
+        assert call_args[0] == ("POST", "proposals/5/lines")
+        assert call_args[1]["data"]["desc"] == "Test Line"
+        assert call_args[1]["data"]["fk_product"] == 99
+        assert "product_id" not in call_args[1]["data"]
+
+
+@pytest.mark.asyncio
+async def test_client_update_proposal_line():
+    """Test client.update_proposal_line() method."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"success": 1}
+        
+        await client.update_proposal_line(
+            proposal_id=5,
+            line_id=10,
+            qty=3
+        )
+        
+        call_args = mock_request.call_args
+        assert call_args[0] == ("PUT", "proposals/5/lines/10")
+        assert call_args[1]["data"]["qty"] == 3
+
+
+@pytest.mark.asyncio
+async def test_client_delete_proposal_line():
+    """Test client.delete_proposal_line() method."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"success": 1}
+        
+        await client.delete_proposal_line(proposal_id=5, line_id=10)
+        
+        call_args = mock_request.call_args
+        assert call_args[0] == ("DELETE", "proposals/5/lines/10")
+
+
+@pytest.mark.asyncio
+async def test_client_validate_proposal():
+    """Test client.validate_proposal() method."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"success": 1, "status": 1}
+        
+        result = await client.validate_proposal(proposal_id=5)
+        
+        call_args = mock_request.call_args
+        assert call_args[0] == ("POST", "proposals/5/validate")
+
+
+@pytest.mark.asyncio
+async def test_client_convert_proposal_to_order():
+    """Test client.convert_proposal_to_order() method."""
+    config_mock = AsyncMock()
+    client = DolibarrClient(config_mock)
+    
+    with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"id": 20, "ref": "CMD-020"}
+        
+        result = await client.convert_proposal_to_order(proposal_id=5)
+        
+        call_args = mock_request.call_args
+        assert call_args[0] == ("POST", "proposals/5/convert")

@@ -497,6 +497,75 @@ class DolibarrClient:
         """Get specific proposal by ID."""
         return await self.request("GET", f"proposals/{proposal_id}")
     
+    async def create_proposal(
+        self,
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Create a new proposal."""
+        payload = self._merge_payload(data, **kwargs)
+        
+        # Fix: Map customer_id to socid if present
+        if "customer_id" in payload and "socid" not in payload:
+            payload["socid"] = payload.pop("customer_id")
+            
+        result = await self.request("POST", "proposals", data=payload)
+        return self._extract_identifier(result)
+    
+    async def update_proposal(
+        self,
+        proposal_id: int,
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Update an existing proposal."""
+        payload = self._merge_payload(data, **kwargs)
+        return await self.request("PUT", f"proposals/{proposal_id}", data=payload)
+
+    async def delete_proposal(self, proposal_id: int) -> Dict[str, Any]:
+        """Delete a proposal."""
+        return await self.request("DELETE", f"proposals/{proposal_id}")
+
+    async def add_proposal_line(
+        self,
+        proposal_id: int,
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Add a line to a proposal."""
+        payload = self._merge_payload(data, **kwargs)
+        
+        # Map product_id to fk_product if present
+        if "product_id" in payload:
+            payload["fk_product"] = payload.pop("product_id")
+            
+        return await self.request("POST", f"proposals/{proposal_id}/lines", data=payload)
+
+    async def update_proposal_line(
+        self,
+        proposal_id: int,
+        line_id: int,
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Update a line in a proposal."""
+        payload = self._merge_payload(data, **kwargs)
+        return await self.request("PUT", f"proposals/{proposal_id}/lines/{line_id}", data=payload)
+
+    async def delete_proposal_line(self, proposal_id: int, line_id: int) -> Dict[str, Any]:
+        """Delete a line from a proposal."""
+        return await self.request("DELETE", f"proposals/{proposal_id}/lines/{line_id}")
+
+    async def validate_proposal(self, proposal_id: int) -> Dict[str, Any]:
+        """Validate a draft proposal (transition to Open/Signed state)."""
+        payload = {}
+        return await self.request("POST", f"proposals/{proposal_id}/validate", data=payload)
+
+    async def convert_proposal_to_order(self, proposal_id: int) -> Dict[str, Any]:
+        """Convert a proposal to an order."""
+        payload = {}
+        return await self.request("POST", f"proposals/{proposal_id}/convert", data=payload)
+    
     # ============================================================================
     # ORDER MANAGEMENT
     # ============================================================================
