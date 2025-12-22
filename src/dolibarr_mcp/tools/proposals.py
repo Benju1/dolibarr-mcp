@@ -12,9 +12,8 @@ from ..models import ProposalResult, ProposalLine, InvoiceLine
 
 def _require_client() -> DolibarrClient:
     """Ensure client is initialized and return it."""
-    # This will be injected by the server module
-    from ..server import _get_client
-    return _get_client()
+    from ..state import get_client
+    return get_client()
 
 
 def register_proposal_tools(mcp: FastMCP) -> None:
@@ -34,15 +33,15 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         """
         client = _require_client()
         
+        thirdparty_ids = str(customer_id) if customer_id else None
+        
         filters = []
-        if customer_id:
-            filters.append(f"(t.fk_soc:=:{customer_id})")  # Correct field: fk_soc (not socid)
         if project_id:
             filters.append(f"(t.fk_projet:=:{project_id})")
         
         sqlfilters = " AND ".join(filters) if filters else None
         
-        result = await client.get_proposals(limit=limit, status=status, sqlfilters=sqlfilters)
+        result = await client.get_proposals(limit=limit, status=status, sqlfilters=sqlfilters, thirdparty_ids=thirdparty_ids)
         return [ProposalResult(**item) for item in result]
 
     @mcp.tool()
@@ -66,14 +65,10 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         """Create a new proposal (draft). Returns full proposal details."""
         client = _require_client()
         
-        lines_data = []
-        if lines:
-            lines_data = [line.model_dump(exclude_none=True) for line in lines]
-        
+        # 1. Create proposal header
         payload = {
             "socid": customer_id,
             "date": date,
-            "lines": lines_data,
             "statut": 0  # Draft status
         }
         
@@ -84,6 +79,28 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         
         result = await client.create_proposal(payload)
         proposal_id = result.get("id") if isinstance(result, dict) else result
+        
+        # 2. Add lines individually
+        if lines:
+            for line in lines:
+                line_data = line.model_dump(exclude_none=True)
+                
+                # Map fields to Dolibarr API format
+                api_line = {}
+                if "description" in line_data:
+                    api_line["desc"] = line_data["description"]
+                if "unit_price" in line_data:
+                    api_line["subprice"] = str(line_data["unit_price"])
+                if "quantity" in line_data:
+                    api_line["qty"] = str(line_data["quantity"])
+                if "vat_rate" in line_data:
+                    api_line["tva_tx"] = str(line_data["vat_rate"])
+                if "product_id" in line_data:
+                    api_line["fk_product"] = line_data["product_id"]
+                if "product_type" in line_data:
+                    api_line["product_type"] = line_data["product_type"]
+                    
+                await client.add_proposal_line(proposal_id, api_line)
         
         # Return full state
         return await get_proposal_by_id(proposal_id)

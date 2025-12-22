@@ -13,29 +13,30 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 import pytest
 from unittest.mock import AsyncMock, patch
 from dolibarr_mcp import server as server_module
+from dolibarr_mcp import state as state_module
 
 
 @pytest.mark.asyncio
 async def test_server_get_client_uninitialized():
-    """Test that _get_client() raises error if server not initialized."""
+    """Test that get_client() raises error if server not initialized."""
     # Reset the global client
-    server_module._client = None
+    state_module.set_client(None)
     
     with pytest.raises(RuntimeError, match="Server not initialized"):
-        server_module._get_client()
+        state_module.get_client()
 
 
 @pytest.mark.asyncio
 async def test_server_get_client_initialized():
-    """Test that _get_client() returns client when initialized."""
+    """Test that get_client() returns client when initialized."""
     mock_client = AsyncMock()
-    server_module._client = mock_client
+    state_module.set_client(mock_client)
     
-    result = server_module._get_client()
+    result = state_module.get_client()
     assert result is mock_client
     
     # Cleanup
-    server_module._client = None
+    state_module.set_client(None)
 
 
 def test_mcp_server_initialized():

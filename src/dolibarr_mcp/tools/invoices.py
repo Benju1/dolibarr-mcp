@@ -10,8 +10,8 @@ from ..models import InvoiceResult, InvoiceLine
 
 
 def _require_client() -> DolibarrClient:
-    from ..server import _get_client
-    return _get_client()
+    from ..state import get_client
+    return get_client()
 
 
 def register_invoice_tools(mcp: FastMCP) -> None:
@@ -28,13 +28,10 @@ def register_invoice_tools(mcp: FastMCP) -> None:
         """Create a new invoice (draft). Returns the new invoice ID."""
         client = _require_client()
             
-        # Convert Pydantic models to dicts
-        lines_data = [line.model_dump(exclude_none=True) for line in lines]
-        
+        # 1. Create invoice header
         payload = {
             "socid": customer_id,
             "date": date,
-            "lines": lines_data,
             "type": 0,  # Standard invoice
             "statut": 0  # Draft
         }
@@ -44,7 +41,60 @@ def register_invoice_tools(mcp: FastMCP) -> None:
         if payment_mode_id:
             payload["mode_reglement_id"] = payment_mode_id
                 
-        return await client.create_invoice(payload)
+        invoice_id = await client.create_invoice(payload)
+        
+        # 2. Add lines individually
+        for line in lines:
+            line_data = line.model_dump(exclude_none=True)
+            
+            # Map fields to Dolibarr API format
+            api_line = {}
+            if "description" in line_data:
+                api_line["desc"] = line_data["description"]
+            if "unit_price" in line_data:
+                api_line["subprice"] = str(line_data["unit_price"])
+            if "quantity" in line_data:
+                api_line["qty"] = str(line_data["quantity"])
+            if "vat_rate" in line_data:
+                api_line["tva_tx"] = str(line_data["vat_rate"])
+            if "product_id" in line_data:
+                api_line["fk_product"] = line_data["product_id"]
+            if "product_type" in line_data:
+                api_line["product_type"] = line_data["product_type"]
+                
+            await client.add_invoice_line(invoice_id, api_line)
+            
+        return invoice_id
+
+    @mcp.tool()
+    async def add_invoice_line(
+        invoice_id: int = Field(..., description="Invoice ID"),
+        description: str = Field(..., description="Line description"),
+        unit_price: float = Field(..., description="Unit price (net)"),
+        quantity: float = Field(..., description="Quantity"),
+        vat_rate: float = Field(20.0, description="VAT rate (%)"),
+        product_id: Optional[int] = Field(None, description="Product ID (optional)")
+    ) -> int:
+        """Add a line to an invoice. Returns the created line ID."""
+        client = _require_client()
+        
+        line_data = {
+            "desc": description,
+            "subprice": str(unit_price),
+            "qty": str(quantity),
+            "tva_tx": str(vat_rate)
+        }
+        
+        if product_id:
+            line_data["fk_product"] = product_id
+            
+        result = await client.add_invoice_line(invoice_id, line_data)
+        # Dolibarr returns int (line_id) or dict with id
+        if isinstance(result, (int, str)):
+            return int(result)
+        if isinstance(result, dict):
+            return int(result.get("id", 0))
+        return 0
 
     @mcp.tool()
     async def get_invoices(

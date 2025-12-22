@@ -12,6 +12,7 @@ from fastmcp import FastMCP
 
 from .config import Config
 from .dolibarr_client import DolibarrClient
+from .state import set_client
 
 # Tool modules
 from .tools.proposals import register_proposal_tools
@@ -25,21 +26,10 @@ from .tools.products import register_product_tools
 from .tools.system import register_system_tools
 
 
-# Global client instance
-_client: Optional[DolibarrClient] = None
-
-
-def _get_client() -> DolibarrClient:
-    """Get the global client instance. Used by tool modules."""
-    if not _client:
-        raise RuntimeError("Server not initialized - client is not available")
-    return _client
-
-
 @asynccontextmanager
 async def server_lifespan(server: FastMCP):
     """Manage server lifecycle and API client session."""
-    global _client
+    client: Optional[DolibarrClient] = None
     
     # Load configuration
     try:
@@ -53,12 +43,13 @@ async def server_lifespan(server: FastMCP):
             raise RuntimeError("DOLIBARR_API_KEY not configured properly")
             
         # Initialize client
-        _client = DolibarrClient(config)
-        await _client.start_session()
+        client = DolibarrClient(config)
+        await client.start_session()
+        set_client(client)
         
         # Test connection
         try:
-            status = await _client.get_status()
+            status = await client.get_status()
             version = status.get("dolibarr_version", "Unknown")
             print(f"✅ Connected to Dolibarr API (Version: {version})", file=sys.stderr)
         except Exception as e:
@@ -68,12 +59,12 @@ async def server_lifespan(server: FastMCP):
         
     finally:
         # Cleanup
-        if _client:
+        if client:
             try:
-                await _client.close_session()
+                await client.close_session()
                 print("👋 Dolibarr client session closed", file=sys.stderr)
             finally:
-                _client = None
+                set_client(None)
 
 
 # Initialize FastMCP server

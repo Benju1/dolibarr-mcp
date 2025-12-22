@@ -482,13 +482,15 @@ class DolibarrClient:
     # PROPOSAL MANAGEMENT
     # ============================================================================
     
-    async def get_proposals(self, limit: int = 100, status: Optional[str] = None, sqlfilters: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_proposals(self, limit: int = 100, status: Optional[str] = None, sqlfilters: Optional[str] = None, thirdparty_ids: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get list of proposals."""
         params = {"limit": limit}
         if status:
             params["status"] = status
         if sqlfilters:
             params["sqlfilters"] = sqlfilters
+        if thirdparty_ids:
+            params["thirdparty_ids"] = thirdparty_ids
         
         result = await self.request("GET", "proposals", params=params)
         return result if isinstance(result, list) else []
@@ -606,6 +608,22 @@ class DolibarrClient:
     async def delete_order(self, order_id: int) -> Dict[str, Any]:
         """Delete an order."""
         return await self.request("DELETE", f"orders/{order_id}")
+
+    async def add_order_line(
+        self,
+        order_id: int,
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Add a line to an order."""
+        payload = self._merge_payload(data, **kwargs)
+        
+        # Map product_id to fk_product if present
+        if "product_id" in payload:
+            payload["fk_product"] = payload.pop("product_id")
+            
+        return await self.request("POST", f"orders/{order_id}/lines", data=payload)
+
     
     # ============================================================================
     # CONTACT MANAGEMENT

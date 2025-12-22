@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 from decimal import Decimal
 
 from dolibarr_mcp import server as server_module
+from dolibarr_mcp import state as state_module
 from dolibarr_mcp.models import ProposalResult, ProposalLine, InvoiceLine
 from dolibarr_mcp.tools.proposals import register_proposal_tools
 
@@ -82,13 +83,13 @@ async def test_create_proposal_returns_full_state():
         "project_id": 5
     }
     
-    server_module._client = mock_client
+    state_module.set_client(mock_client)
     
     # This test validates that the tool structure is correct
     # The actual tool function is registered via FastMCP decorator
-    assert server_module._get_client() is mock_client
+    assert state_module.get_client() is mock_client
     
-    server_module._client = None
+    state_module.set_client(None)
 
 
 @pytest.mark.asyncio
@@ -108,9 +109,9 @@ async def test_update_proposal_returns_full_state():
         "project_id": 5
     }
     
-    server_module._client = mock_client
-    assert server_module._get_client() is mock_client
-    server_module._client = None
+    state_module.set_client(mock_client)
+    assert state_module.get_client() is mock_client
+    state_module.set_client(None)
 
 
 @pytest.mark.asyncio
@@ -128,10 +129,10 @@ async def test_add_proposal_line_returns_line_details():
         "fk_product": None
     }
     
-    server_module._client = mock_client
-    result = server_module._get_client()
+    state_module.set_client(mock_client)
+    result = state_module.get_client()
     assert result is mock_client
-    server_module._client = None
+    state_module.set_client(None)
 
 
 @pytest.mark.asyncio
@@ -140,10 +141,10 @@ async def test_delete_proposal_line_returns_line_id():
     mock_client = AsyncMock()
     mock_client.delete_proposal_line.return_value = {}
     
-    server_module._client = mock_client
-    result = server_module._get_client()
+    state_module.set_client(mock_client)
+    result = state_module.get_client()
     assert result is mock_client
-    server_module._client = None
+    state_module.set_client(None)
 
 
 @pytest.mark.asyncio
@@ -189,10 +190,10 @@ async def test_get_proposals_with_customer_filter():
         }
     ]
     
-    server_module._client = mock_client
-    result = server_module._get_client()
+    state_module.set_client(mock_client)
+    result = state_module.get_client()
     assert result is mock_client
-    server_module._client = None
+    state_module.set_client(None)
 
 
 @pytest.mark.asyncio
@@ -212,10 +213,10 @@ async def test_validate_proposal_returns_updated_state():
         "project_id": 5
     }
     
-    server_module._client = mock_client
-    result = server_module._get_client()
+    state_module.set_client(mock_client)
+    result = state_module.get_client()
     assert result is mock_client
-    server_module._client = None
+    state_module.set_client(None)
 
 
 @pytest.mark.asyncio
@@ -227,7 +228,7 @@ async def test_convert_proposal_to_order_returns_order_id():
         "ref": "ORD-2025-001"
     }
     
-    server_module._client = mock_client
-    result = server_module._get_client()
+    state_module.set_client(mock_client)
+    result = state_module.get_client()
     assert result is mock_client
-    server_module._client = None
+    state_module.set_client(None)

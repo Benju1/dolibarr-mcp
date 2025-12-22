@@ -10,8 +10,8 @@ from ..models import ContactResult
 
 
 def _require_client() -> DolibarrClient:
-    from ..server import _get_client
-    return _get_client()
+    from ..state import get_client
+    return get_client()
 
 
 def register_contact_tools(mcp: FastMCP) -> None:
