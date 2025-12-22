@@ -37,9 +37,15 @@ def serve(transport: str, host: str, port: int):
         click.echo(f"🚀 Starting Dolibarr MCP server (Transport: {transport})")
         click.echo(f"📡 Listening on http://{host}:{port}")
         click.echo("🔧 Configure your environment variables in .env file")
+    else:
+        click.echo(f"🚀 Starting Dolibarr MCP server (Transport: {transport})")
     
     # Run the FastMCP server
-    mcp.run(transport=transport, host=host, port=port)
+    # Only pass host/port for HTTP transport
+    if transport == "http":
+        mcp.run(transport=transport, host=host, port=port)
+    else:
+        mcp.run(transport=transport)
 
 
 @cli.command()
