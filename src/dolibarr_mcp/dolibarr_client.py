@@ -479,6 +479,25 @@ class DolibarrClient:
         return await self.request("POST", f"invoices/{invoice_id}/payments", data=data)
     
     # ============================================================================
+    # PROPOSAL MANAGEMENT
+    # ============================================================================
+    
+    async def get_proposals(self, limit: int = 100, status: Optional[str] = None, sqlfilters: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get list of proposals."""
+        params = {"limit": limit}
+        if status:
+            params["status"] = status
+        if sqlfilters:
+            params["sqlfilters"] = sqlfilters
+        
+        result = await self.request("GET", "proposals", params=params)
+        return result if isinstance(result, list) else []
+    
+    async def get_proposal_by_id(self, proposal_id: int) -> Dict[str, Any]:
+        """Get specific proposal by ID."""
+        return await self.request("GET", f"proposals/{proposal_id}")
+    
+    # ============================================================================
     # ORDER MANAGEMENT
     # ============================================================================
     

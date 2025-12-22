@@ -97,6 +97,19 @@ class ContactResult(DolibarrBaseModel):
     phone_pro: Optional[str] = Field(None, description="Professional phone")
 
 
+class ProposalResult(DolibarrBaseModel):
+    """Structured proposal result."""
+    id: int = Field(..., description="Proposal ID")
+    ref: str = Field(..., description="Proposal reference")
+    socid: int = Field(..., description="Customer ID")
+    date: int = Field(..., description="Proposal date timestamp")
+    total_ht: Decimal = Field(..., description="Total net amount")
+    total_tva: Decimal = Field(..., description="Total VAT amount")
+    total_ttc: Decimal = Field(..., description="Total gross amount")
+    status: int = Field(..., description="Status (0=Draft, 1=Open, 2=Signed, 3=Declined, 4=Billed)")
+    project_id: Optional[int] = Field(None, description="Linked project ID")
+
+
 class OrderResult(DolibarrBaseModel):
     """Structured order result."""
     id: int = Field(..., description="Order ID")

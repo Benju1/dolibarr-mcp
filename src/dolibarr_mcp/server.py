@@ -18,7 +18,8 @@ from .models import (
     ProductResult,
     UserResult,
     ContactResult,
-    OrderResult
+    OrderResult,
+    ProposalResult
 )
 
 
@@ -556,6 +557,40 @@ async def add_payment_to_invoice(
     }
     
     return await client.add_payment_to_invoice(invoice_id, payload)
+
+
+
+
+# ============================================================================
+# PROPOSAL TOOLS
+# ============================================================================
+
+@mcp.tool()
+async def get_proposals(
+    limit: int = Field(100, ge=1, le=100, description="Maximum number of proposals"),
+    status: Optional[str] = Field(None, description="Filter by status"),
+    project_id: Optional[int] = Field(None, description="Filter by project ID")
+) -> List[ProposalResult]:
+    """Get a list of proposals (quotes)."""
+    client = _require_client()
+    
+    sqlfilters = None
+    if project_id:
+        sqlfilters = f"(t.fk_projet:=:{project_id})"
+        
+    result = await client.get_proposals(limit=limit, status=status, sqlfilters=sqlfilters)
+    return [ProposalResult(**item) for item in result]
+
+
+@mcp.tool()
+async def get_proposal_by_id(
+    proposal_id: int = Field(..., description="Proposal ID")
+) -> ProposalResult:
+    """Get details of a specific proposal."""
+    client = _require_client()
+        
+    result = await client.get_proposal_by_id(proposal_id)
+    return ProposalResult(**result)
 
 
 

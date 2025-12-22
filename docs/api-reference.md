@@ -24,6 +24,7 @@ resources with comprehensive coverage of Dolibarr entities.
 | Users           | `/users`                    | CRUD helpers under the *Users* group    |
 | Third parties   | `/thirdparties`             | Customer CRUD operations                |
 | Products        | `/products`                 | Product CRUD operations                 |
+| Proposals       | `/proposals`                | `get_proposals`, `get_proposal_by_id`   |
 | Invoices        | `/invoices`                 | Invoice CRUD operations                 |
 | Orders          | `/orders`                   | Order CRUD operations                   |
 | Projects        | `/projects`                 | Project CRUD operations & Search        |

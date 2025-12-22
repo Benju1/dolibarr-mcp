@@ -15,14 +15,14 @@ configuration, API coverage, and contributor workflows.
 
 ## ✨ Features
 
-- **Full ERP coverage** – CRUD tools for users, customers, products, invoices,
+- **Full ERP coverage** – CRUD tools for users, customers, products, proposals, invoices,
   orders, contacts, projects, and raw API access.
 - **Advanced Search** – Server-side filtering for products, customers, and projects to minimize token usage and costs.
 - **Async/await HTTP client** – Efficient Dolibarr API wrapper with structured
   error handling.
 - **Ready for MCP hosts** – STDIO transport compatible with Claude Desktop out
   of the box.
-- **Production-ready** – Extensively tested and optimized for real-world Dolibarr deployments.
+- **Beta status** – Active development with comprehensive test coverage. Ready for experimentation and feedback.
 
 ## ✅ Prerequisites
 
