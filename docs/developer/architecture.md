@@ -84,6 +84,7 @@ Since the creation of complex objects (Proposals, Orders, Invoices) involves mul
 - **Migration to FastMCP:** Moved from low-level `mcp` library to `FastMCP` for better developer experience and reduced boilerplate (See `docs/developer/archive/MIGRATION_STRATEGY.md`).
 - **Pydantic for Models:** Enforced strict typing for better reliability with LLMs.
 - **Sanitization:** Custom `_sanitize_search` implemented to protect against SQL injection in Dolibarr's `sqlfilters`.
+- **Universal Search Filter (USF) Syntax:** All `sqlfilters` parameters must follow Dolibarr's USF format `(field:operator:value)`, not raw SQL. See [DOLIBARR_USF_SYNTAX.md](./DOLIBARR_USF_SYNTAX.md) for complete reference.
 
 ## 10. Quality Requirements
 - **Reliability:** Connection tests on startup.
@@ -96,5 +97,6 @@ Since the creation of complex objects (Proposals, Orders, Invoices) involves mul
 
 ## 12. Glossary
 - **MCP:** Model Context Protocol.
-- **Socid:** Dolibarr's internal ID for Third Parties (Société ID).
+- **Socid/fk_soc:** Dolibarr's internal ID for Third Parties (Société ID). DB field is `fk_soc`, not `socid`.
 - **Ref:** Human-readable reference (e.g., PROJ-2024-001).
+- **USF:** Universal Search Filter - Dolibarr v20+ query syntax `(field:operator:value)`. See [DOLIBARR_USF_SYNTAX.md](./DOLIBARR_USF_SYNTAX.md).
