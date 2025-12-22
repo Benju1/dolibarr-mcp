@@ -82,25 +82,30 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         
         # 2. Add lines individually
         if lines:
-            for line in lines:
-                line_data = line.model_dump(exclude_none=True)
-                
-                # Map fields to Dolibarr API format
-                api_line = {}
-                if "description" in line_data:
-                    api_line["desc"] = line_data["description"]
-                if "unit_price" in line_data:
-                    api_line["subprice"] = str(line_data["unit_price"])
-                if "quantity" in line_data:
-                    api_line["qty"] = str(line_data["quantity"])
-                if "vat_rate" in line_data:
-                    api_line["tva_tx"] = str(line_data["vat_rate"])
-                if "product_id" in line_data:
-                    api_line["fk_product"] = line_data["product_id"]
-                if "product_type" in line_data:
-                    api_line["product_type"] = line_data["product_type"]
+            try:
+                for line in lines:
+                    line_data = line.model_dump(exclude_none=True)
                     
-                await client.add_proposal_line(proposal_id, api_line)
+                    # Map fields to Dolibarr API format
+                    api_line = {}
+                    if "description" in line_data:
+                        api_line["desc"] = line_data["description"]
+                    if "unit_price" in line_data:
+                        api_line["subprice"] = str(line_data["unit_price"])
+                    if "quantity" in line_data:
+                        api_line["qty"] = str(line_data["quantity"])
+                    if "vat_rate" in line_data:
+                        api_line["tva_tx"] = str(line_data["vat_rate"])
+                    if "product_id" in line_data:
+                        api_line["fk_product"] = line_data["product_id"]
+                    if "product_type" in line_data:
+                        api_line["product_type"] = line_data["product_type"]
+                        
+                    await client.add_proposal_line(proposal_id, api_line)
+            except Exception:
+                # Rollback: delete the proposal if line addition fails
+                await client.delete_proposal(proposal_id)
+                raise
         
         # Return full state
         return await get_proposal_by_id(proposal_id)

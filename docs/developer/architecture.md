@@ -66,8 +66,10 @@ To avoid circular imports between the main server file (which registers tools) a
 *   `server.py` -> imports `state` (writes client)
 *   `tools/*.py` -> imports `state` (reads client)
 
-### 7.3 Decimal Handling
-Dolibarr expects monetary values as strings or numbers. To avoid floating-point errors, Python `Decimal` types are converted to strings before being sent to the API (e.g., `"subprice": str(unit_price)`).
+### 7.4 Error Handling & Rollback
+Since the creation of complex objects (Proposals, Orders, Invoices) involves multiple API calls (Header + N Lines), a failure during line addition could leave the system in an inconsistent state (e.g., an empty invoice).
+**Solution:** The creation tools implement a rollback mechanism. If adding any line fails, the tool catches the exception, deletes the partially created header object via the API, and then re-raises the exception to the caller. This ensures atomicity of the creation operation from the user's perspective.
+
 
 ## 7. Deployment View
 - **Docker:** `Dockerfile` and `docker-compose.yml` provided for containerized deployment.
