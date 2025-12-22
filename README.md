@@ -1,7 +1,7 @@
 # Dolibarr MCP Server
 
 Dolibarr MCP delivers a Model Context Protocol (MCP) interface for the Dolibarr
-ERP/CRM—an async API client, a production-ready STDIO server, and comprehensive
+ERP/CRM—an async API client, a STDIO server, and comprehensive
 documentation optimized for Dolibarr workflows.
 
 **Design Philosophy:** This server implements **specialized search tools** (e.g., `search_products_by_ref`, `resolve_product_ref`) optimized specifically for Dolibarr instead of a single unified `get_` tool. This design choice ensures efficient server-side filtering via Dolibarr's SQL API, preventing the agent from accidentally loading thousands of records and exceeding context limits.
