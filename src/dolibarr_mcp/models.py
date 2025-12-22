@@ -97,6 +97,18 @@ class ContactResult(DolibarrBaseModel):
     phone_pro: Optional[str] = Field(None, description="Professional phone")
 
 
+class ProposalLine(DolibarrBaseModel):
+    """A line item in a proposal."""
+    id: int = Field(..., description="Line ID")
+    description: str = Field(..., alias="desc", description="Line description")
+    unit_price: Decimal = Field(..., alias="subprice", description="Unit price (net)")
+    qty: Decimal = Field(..., description="Quantity")
+    vat_rate: Decimal = Field(..., alias="tva_tx", description="VAT rate (%)")
+    total_ht: Decimal = Field(..., description="Total net amount")
+    total_ttc: Decimal = Field(..., description="Total gross amount")
+    product_id: Optional[int] = Field(None, alias="fk_product", description="Product ID")
+
+
 class ProposalResult(DolibarrBaseModel):
     """Structured proposal result."""
     id: int = Field(..., description="Proposal ID")
