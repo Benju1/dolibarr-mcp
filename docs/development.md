@@ -8,19 +8,14 @@ For architectural details, see [Architecture Documentation](developer/architectu
 
 ## Install development dependencies
 
-It is recommended to use a virtual environment to avoid conflicts with system packages (especially on Linux systems with externally managed environments).
+This project uses `uv` for dependency management.
 
 ```bash
-# Create a virtual environment
-python3 -m venv .venv
-
-# Activate the virtual environment
-source .venv/bin/activate  # On Linux/macOS
-# .venv\Scripts\activate   # On Windows
+# Install uv (if you haven't already)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install dependencies
-pip install -r requirements.txt
-pip install -e .
+uv sync
 ```
 
 ## Run the test suite
