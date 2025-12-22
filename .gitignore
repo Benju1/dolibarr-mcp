@@ -88,6 +88,3 @@ logs/
 *.bak
 *.swp
 *~
-# QA & internal documentation (don't commit)
-QUALITY_*.md
-DOCUMENTATION_COMPLETE.md
