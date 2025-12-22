@@ -11,9 +11,9 @@ It allows AI agents to interact with a Dolibarr instance to perform operations l
 - Securely handle API credentials.
 
 ## 2. Constraints
-- **Language:** Python 3.10+
+- **Language:** Python 3.12+
 - **Framework:** FastMCP (v2.x)
-- **External System:** Dolibarr REST API (v18+)
+- **External System:** Dolibarr REST API (v22.0.0+)
 - **Deployment:** Docker / Local
 
 ## 3. Context and Scope
@@ -27,26 +27,47 @@ The MCP Server acts as a bridge between an AI Client (e.g., Claude Desktop, Curs
 ## 4. Solution Strategy
 - **FastMCP:** Used for defining tools and resources with minimal boilerplate.
 - **DolibarrClient:** A dedicated class for handling HTTP communication with Dolibarr, error handling, and response parsing.
+- **State Management:** A `state.py` module manages the global client instance to prevent circular imports and enable clean dependency injection.
 - **Pydantic Models:** Used for defining the schema of inputs and outputs, ensuring data consistency.
 - **Separation of Concerns:** Server logic (MCP) is separated from Business logic (Client).
 
 ## 5. Building Block View
 
 ### Level 1: Whitebox
-- **MCP Server (`server.py`)**: The entry point. Defines tools using `@mcp.tool()`. Handles request routing.
+- **MCP Server (`server.py`)**: The entry point. Initializes the server and registers tools.
+- **State Manager (`state.py`)**: Holds the singleton `DolibarrClient` instance. Resolves circular dependencies between server and tools.
+- **Tool Modules (`tools/*.py`)**: Domain-specific tool implementations (e.g., `proposals.py`, `invoices.py`). They import the client from `state.py`.
 - **Dolibarr Client (`dolibarr_client.py`)**: Encapsulates the Dolibarr API. Handles authentication (`DOLAPIKEY`), request construction, and error mapping.
 - **Models (`models.py`)**: Pydantic models representing Dolibarr entities (Project, Customer, Invoice, etc.).
 - **Config (`config.py`)**: Manages environment variables and configuration.
 
 ## 6. Runtime View
-1.  **Tool Call:** AI Agent requests a tool execution (e.g., `search_projects`).
-2.  **Validation:** FastMCP validates arguments against Pydantic models.
-3.  **Execution:** `server.py` calls the corresponding method in `DolibarrClient`.
-4.  **API Request:** `DolibarrClient` sends an HTTP request to Dolibarr API.
-5.  **Response:** Dolibarr returns JSON.
-6.  **Parsing:** `DolibarrClient` parses the JSON.
-7.  **Mapping:** `server.py` maps the raw dict to a Pydantic model (e.g., `ProjectSearchResult`).
+1.  **Startup:** `server.py` initializes `DolibarrClient` and stores it in `state.py`.
+2.  **Tool Call:** AI Agent requests a tool execution (e.g., `create_proposal`).
+3.  **Validation:** FastMCP validates arguments against Pydantic models.
+4.  **Execution:** The tool function retrieves the client from `state.py`.
+5.  **2-Step Creation (Transactional Pattern):**
+    *   **Step 1:** Tool calls `client.create_object()` (Header only).
+    *   **Step 2:** Tool iterates over lines and calls `client.add_line()` for each item.
+6.  **API Request:** `DolibarrClient` sends HTTP requests to Dolibarr API.
+7.  **Response:** Dolibarr returns JSON.
 8.  **Return:** FastMCP returns the structured result to the AI Agent.
+
+## 7. Technical Decisions & Patterns
+
+### 7.1 2-Step Creation Pattern
+Dolibarr's REST API (v22.0.0) does **not** process line items (e.g., invoice lines) sent within the POST body of the parent object creation (e.g., `POST /invoices`). The `lines` field is ignored.
+**Solution:** All creation tools (`create_proposal`, `create_order`, `create_invoice`) implement a 2-step process:
+1.  Create the header object via `POST /endpoint`.
+2.  Add lines individually via `POST /endpoint/{id}/lines`.
+
+### 7.2 State Management
+To avoid circular imports between the main server file (which registers tools) and tool modules (which need the client instance), a dedicated `state.py` module is used.
+*   `server.py` -> imports `state` (writes client)
+*   `tools/*.py` -> imports `state` (reads client)
+
+### 7.3 Decimal Handling
+Dolibarr expects monetary values as strings or numbers. To avoid floating-point errors, Python `Decimal` types are converted to strings before being sent to the API (e.g., `"subprice": str(unit_price)`).
 
 ## 7. Deployment View
 - **Docker:** `Dockerfile` and `docker-compose.yml` provided for containerized deployment.
