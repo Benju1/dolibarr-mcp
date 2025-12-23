@@ -28,7 +28,7 @@ def register_contact_tools(mcp: FastMCP) -> None:
             
         sqlfilters = None
         if customer_id:
-            sqlfilters = f"(t.socid={customer_id})"
+            sqlfilters = f"(t.socid:'{customer_id}')"
                 
         result = await client.get_contacts(limit=limit, page=page, sqlfilters=sqlfilters)
         return [ContactResult(**item) for item in result]

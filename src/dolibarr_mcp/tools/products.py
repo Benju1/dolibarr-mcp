@@ -34,7 +34,7 @@ def register_product_tools(mcp: FastMCP) -> None:
         client = _require_client()
             
         ref_sanitized = _sanitize_search(ref_prefix)
-        sqlfilters = f"(t.ref=like:'{ref_sanitized}%')"
+        sqlfilters = f"(t.ref:like:'{ref_sanitized}%')"
         
         try:
             result = await client.search_products(sqlfilters=sqlfilters, limit=limit)
@@ -67,7 +67,7 @@ def register_product_tools(mcp: FastMCP) -> None:
         client = _require_client()
             
         ref_sanitized = _sanitize_search(ref)
-        sqlfilters = f"(t.ref={ref_sanitized})"
+        sqlfilters = f"(t.ref:'{ref_sanitized}')"
         
         try:
             products = await client.search_products(sqlfilters=sqlfilters, limit=2)
