@@ -4,6 +4,21 @@ All notable changes to the Dolibarr MCP Server are documented here. The project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and adopts the
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
+## [1.1.1] - 2026-02-16
+
+### Fixed
+- Accept scientific notation (e.g., `0E-8`, `1.5E-10`) in Decimal fields for invoices, proposals, and products. This fixes FastMCP JSON Schema validation errors when Dolibarr API returns numeric values in exponential format, which can occur in tax calculations, VAT rates, small quantities, and rounding differences. ([#3](https://github.com/Benju1/dolibarr-mcp/issues/3))
+
+### Changed
+- Introduced `ScientificDecimal` type that extends Pydantic's `Decimal` with a custom JSON Schema pattern to accept both normal decimals and scientific notation
+- Replaced `Decimal` with `ScientificDecimal` in all 17 monetary and numeric fields across `InvoiceResult`, `InvoiceLine`, `ProposalResult`, `ProposalLine`, and `ProductResult` models
+- Added comprehensive test suite (`tests/test_scientific_decimal.py`) with 15 tests covering parsing, validation, serialization, and edge cases
+
+### Technical Details
+- Maintains full `Decimal` precision for financial calculations (no float conversion)
+- JSON Schema regex pattern: `^(?!^[-+.]*$)[+-]?0*\d*\.?\d*([eE][+-]?\d+)?$`
+- Backward compatible: all existing tests (98 total) continue to pass
+
 ### Added
 - Restored README.md and CHANGELOG.md after merge conflicts while preserving the streamlined structure.
 - Documented platform-specific setup covering Linux/macOS shells, Windows Visual Studio `vsenv`, and the Docker workflow.
