@@ -7,8 +7,8 @@ from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file (but don't override existing env vars)
+load_dotenv(override=False)
 
 
 class Config(BaseSettings):
@@ -167,8 +167,14 @@ class Config(BaseSettings):
         self.dolibarr_api_key = type(self).validate_api_key(self.dolibarr_api_key)
         self.log_level = type(self).validate_log_level(self.log_level)
 
-        if self.dolibarr_url.endswith('your-dolibarr-instance.com/api/index.php') or self.dolibarr_api_key in {'', 'placeholder_api_key', 'your_dolibarr_api_key_here'}:
-            raise ValueError('Dolibarr configuration is incomplete')
+        if self.dolibarr_url.endswith(
+            "your-dolibarr-instance.com/api/index.php"
+        ) or self.dolibarr_api_key in {
+            "",
+            "placeholder_api_key",
+            "your_dolibarr_api_key_here",
+        }:
+            raise ValueError("Dolibarr configuration is incomplete")
 
     @property
     def api_key(self) -> str:
