@@ -55,6 +55,8 @@ coverage.xml
 cover/
 
 # Environments
+# Note: The encrypted .env file (via SOPS) is committed to the repository
+# Unencrypted .env files should never be committed
 .env
 .env.local
 
