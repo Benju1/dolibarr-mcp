@@ -4,6 +4,21 @@ All notable changes to the Dolibarr MCP Server are documented here. The project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and adopts the
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
+## [1.2.0] - 2026-02-22
+
+### Added
+- Invoice line items in `get_invoice_by_id` responses via new `InvoiceLineResult` model ([#4](https://github.com/Benju1/dolibarr-mcp/issues/4))
+- `search_invoices` tool with server-side filtering by customer ID and status using USF syntax ([#5](https://github.com/Benju1/dolibarr-mcp/issues/5))
+- Pagination support (`page` parameter) for `get_invoices` ([#6](https://github.com/Benju1/dolibarr-mcp/issues/6))
+- Proposal line items in `get_proposal_by_id` responses by adding `lines` field to `ProposalResult` ([#7](https://github.com/Benju1/dolibarr-mcp/issues/7))
+- Test suite for new features (`tests/test_new_features.py`, 16 tests)
+- `pytest` and `pytest-cov` as uv dev dependencies
+
+### Technical Details
+- `InvoiceLineResult` model with fields: id, desc, qty, subprice, total_ht/tva/ttc, tva_tx, product_type/ref/label, fk_product
+- `InvoiceResult.lines` and `ProposalResult.lines` are `Optional[list]` so list endpoints (without lines) and detail endpoints (with lines) share the same model
+- `search_invoices` client method uses `sortfield=t.rowid` / `sortorder=DESC` for newest-first results
+
 ## [1.1.1] - 2026-02-16
 
 ### Fixed

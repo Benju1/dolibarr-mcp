@@ -104,12 +104,42 @@ def register_invoice_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def get_invoices(
         limit: int = Field(100, ge=1, le=100, description="Maximum number of invoices"),
+        page: int = Field(0, ge=0, description="Page number (starts at 0)"),
         status: Optional[str] = Field(None, description="Filter by status (draft, unpaid, paid)")
     ) -> List[InvoiceResult]:
-        """Get a list of invoices."""
+        """Get a paginated list of invoices."""
         client = _require_client()
-            
-        result = await client.get_invoices(limit=limit, status=status)
+
+        result = await client.get_invoices(limit=limit, page=page, status=status)
+        return [InvoiceResult(**item) for item in result]
+
+    STATUS_MAP = {
+        "draft": 0,
+        "unpaid": 1,
+        "paid": 2,
+        "abandoned": 3,
+    }
+
+    @mcp.tool()
+    async def search_invoices(
+        customer_id: Optional[int] = Field(None, description="Filter by customer ID"),
+        status: Optional[str] = Field(None, description="Filter by status (draft, unpaid, paid, abandoned)"),
+        limit: int = Field(20, ge=1, le=100, description="Maximum number of results"),
+    ) -> List[InvoiceResult]:
+        """Search invoices with server-side filtering.
+
+        Uses Dolibarr Universal Search Filter (USF) syntax.
+        Can combine both customer_id and status filters."""
+        client = _require_client()
+
+        filters = []
+        if customer_id is not None:
+            filters.append(f"(t.fk_soc:=:{customer_id})")
+        if status and status in STATUS_MAP:
+            filters.append(f"(t.fk_statut:=:{STATUS_MAP[status]})")
+        sqlfilters = " and ".join(filters) if filters else ""
+
+        result = await client.search_invoices(sqlfilters=sqlfilters, limit=limit)
         return [InvoiceResult(**item) for item in result]
 
     @mcp.tool()

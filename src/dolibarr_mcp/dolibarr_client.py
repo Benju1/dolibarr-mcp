@@ -385,15 +385,23 @@ class DolibarrClient:
     # INVOICE MANAGEMENT
     # ============================================================================
     
-    async def get_invoices(self, limit: int = 100, status: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_invoices(self, limit: int = 100, page: int = 0, status: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get list of invoices."""
-        params = {"limit": limit}
+        params: Dict[str, Any] = {"limit": limit, "page": page}
         if status:
             params["status"] = status
         
         result = await self.request("GET", "invoices", params=params)
         return result if isinstance(result, list) else []
     
+    async def search_invoices(self, sqlfilters: str = "", limit: int = 20) -> List[Dict[str, Any]]:
+        """Search invoices using SQL filters."""
+        params: Dict[str, Any] = {"limit": limit, "sortfield": "t.rowid", "sortorder": "DESC"}
+        if sqlfilters:
+            params["sqlfilters"] = sqlfilters
+        result = await self.request("GET", "invoices", params=params)
+        return result if isinstance(result, list) else []
+
     async def get_invoice_by_id(self, invoice_id: int) -> Dict[str, Any]:
         """Get specific invoice by ID."""
         return await self.request("GET", f"invoices/{invoice_id}")

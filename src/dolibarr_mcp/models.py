@@ -112,6 +112,23 @@ class InvoiceLine(DolibarrBaseModel):
     product_type: int = Field(0, description="Type (0=Product, 1=Service)")
 
 
+class InvoiceLineResult(DolibarrBaseModel):
+    """Invoice line item from API response."""
+
+    id: int = Field(..., description="Line ID")
+    desc: str = Field("", description="Description")
+    qty: ScientificDecimal = Field(..., description="Quantity")
+    subprice: ScientificDecimal = Field(..., description="Unit price (net)")
+    total_ht: ScientificDecimal = Field(..., description="Total net amount")
+    total_tva: ScientificDecimal = Field(..., description="Total VAT amount")
+    total_ttc: ScientificDecimal = Field(..., description="Total gross amount")
+    tva_tx: ScientificDecimal = Field(..., description="VAT rate (%)")
+    product_type: int = Field(0, description="Type (0=Product, 1=Service)")
+    product_ref: Optional[str] = Field(None, description="Product reference")
+    product_label: Optional[str] = Field(None, description="Product label")
+    fk_product: Optional[int] = Field(None, description="Product ID")
+
+
 class InvoiceResult(DolibarrBaseModel):
     """Structured invoice result."""
 
@@ -126,6 +143,7 @@ class InvoiceResult(DolibarrBaseModel):
     status: int = Field(
         ..., description="Status (0=Draft, 1=Unpaid, 2=Paid, 3=Abandoned)"
     )
+    lines: Optional[list[InvoiceLineResult]] = Field(None, description="Invoice line items")
 
 
 class ProductResult(DolibarrBaseModel):
@@ -197,6 +215,7 @@ class ProposalResult(DolibarrBaseModel):
         ..., description="Status (0=Draft, 1=Open, 2=Signed, 3=Declined, 4=Billed)"
     )
     project_id: Optional[int] = Field(None, description="Linked project ID")
+    lines: Optional[list[ProposalLine]] = Field(None, description="Proposal line items")
 
 
 class OrderResult(DolibarrBaseModel):

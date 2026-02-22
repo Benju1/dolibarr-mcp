@@ -41,7 +41,7 @@ This project uses `uv` for dependency management.
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone the repository
-git clone https://github.com/latinogino/dolibarr-mcp.git
+git clone https://github.com/Benju1/dolibarr-mcp.git
 cd dolibarr-mcp
 
 # Install dependencies
@@ -133,10 +133,20 @@ When the environment variables are already set, omit the overrides and run
 
 ## 🧪 Development
 
-- Run the test-suite with `pytest` (see [`docs/development.md`](docs/development.md)
-  for coverage options and Docker helpers).
-- Editable installs rely on the `src/` layout and expose the `dolibarr-mcp`
-  console entry point for backwards compatibility.
+Run the test suite:
+
+```bash
+uv run pytest
+```
+
+For verbose output with coverage:
+
+```bash
+uv run pytest -v --cov=src/dolibarr_mcp --cov-report=term-missing
+```
+
+See [`docs/04_guides/development.md`](docs/04_guides/development.md) for Docker helpers and
+additional contributor workflows.
 
 ## 📄 License
 
