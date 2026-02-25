@@ -251,8 +251,25 @@ class TestProductWithScientificNotation:
             tva_tx=ScientificDecimal("0E-8"),  # Tax-free product
             stock_reel=100.0
         )
-        
+
         assert product.tva_tx == Decimal("0E-8")
+
+    def test_product_type_as_string(self):
+        """Test ProductResult accepts type as string (as returned by Dolibarr API)."""
+        product = ProductResult(
+            id=2,
+            ref="SVC001",
+            label="Test Service",
+            description=None,
+            type="1",  # String as returned by Dolibarr API
+            price=ScientificDecimal("50.00"),
+            price_ttc=ScientificDecimal("59.50"),
+            tva_tx=ScientificDecimal("19.0"),
+            stock_reel=None
+        )
+
+        assert product.type == 1
+        assert isinstance(product.type, int)
 
 
 class TestEdgeCases:

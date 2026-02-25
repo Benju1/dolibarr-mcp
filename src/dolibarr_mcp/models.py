@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union, Literal
-from pydantic import BaseModel, Field, ConfigDict, GetJsonSchemaHandler
+from pydantic import BaseModel, Field, ConfigDict, GetJsonSchemaHandler, field_validator
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema
 
@@ -160,6 +160,13 @@ class ProductResult(DolibarrBaseModel):
     price_ttc: ScientificDecimal = Field(..., description="Selling price including tax")
     tva_tx: ScientificDecimal = Field(..., description="VAT rate")
     stock_reel: Optional[float] = Field(None, description="Current stock")
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def coerce_type(cls, v: Any) -> int:
+        if isinstance(v, str):
+            return int(v)
+        return v
 
 
 class UserResult(DolibarrBaseModel):
