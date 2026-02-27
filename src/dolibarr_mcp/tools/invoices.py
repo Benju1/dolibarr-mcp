@@ -218,3 +218,50 @@ def register_invoice_tools(mcp: FastMCP) -> None:
         }
         
         return await client.add_payment_to_invoice(invoice_id, payload)
+
+    @mcp.tool()
+    async def delete_invoice(
+        invoice_id: int = Field(..., description="Invoice ID to delete")
+    ) -> int:
+        """Delete an invoice (draft only). Returns the deleted invoice ID."""
+        client = _require_client()
+        await client.delete_invoice(invoice_id)
+        return invoice_id
+
+    @mcp.tool()
+    async def update_invoice_line(
+        invoice_id: int = Field(..., description="Invoice ID"),
+        line_id: int = Field(..., description="Line ID"),
+        description: Optional[str] = Field(None, description="Line description"),
+        unit_price: Optional[float] = Field(None, description="Unit price (net)"),
+        quantity: Optional[float] = Field(None, description="Quantity"),
+        vat_rate: Optional[float] = Field(None, description="VAT rate (%)")
+    ) -> int:
+        """Update a line in an invoice (draft only). Returns the line ID."""
+        client = _require_client()
+
+        payload = {}
+        if description is not None:
+            payload["desc"] = description
+        if unit_price is not None:
+            payload["subprice"] = str(unit_price)
+        if quantity is not None:
+            payload["qty"] = str(quantity)
+        if vat_rate is not None:
+            payload["tva_tx"] = str(vat_rate)
+
+        if not payload:
+            raise ValueError("At least one field must be provided for update")
+
+        await client.update_invoice_line(invoice_id, line_id, payload)
+        return line_id
+
+    @mcp.tool()
+    async def delete_invoice_line(
+        invoice_id: int = Field(..., description="Invoice ID"),
+        line_id: int = Field(..., description="Line ID to delete")
+    ) -> int:
+        """Delete a line from an invoice (draft only). Returns the deleted line ID."""
+        client = _require_client()
+        await client.delete_invoice_line(invoice_id, line_id)
+        return line_id
