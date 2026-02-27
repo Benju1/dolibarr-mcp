@@ -5,20 +5,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Cleanup-Funktion
-cleanup() {
-    if [ -f .env.encrypted.backup ]; then
-        mv .env.encrypted.backup .env
-    fi
-}
-trap cleanup EXIT INT TERM
-
-# Backup der verschlüsselten .env
-cp .env .env.encrypted.backup
-
-# Entschlüssele .env und ersetze sie
-sops -d .env > .env.tmp
-mv .env.tmp .env
+# Entschlüssele .env.enc → .env (überschreibt lokale .env)
+sops -d .env.enc > .env
 
 # Starte den MCP-Server
 # Hinweis: Script endet nicht bis Server beendet wird (STDIO-Transport)

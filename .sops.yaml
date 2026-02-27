@@ -1,6 +1,6 @@
 # ./.sops.yaml
 creation_rules:
-  - path_regex: '^\.env$'
+  - path_regex: '^\.env\.enc$'
     encrypted_regex: '.*'
     age:
       - age1dr3yft9jrc2vamsdthjau5k5jhh6sa7cpggll3ddymvgm3fq7dhs4vempr
