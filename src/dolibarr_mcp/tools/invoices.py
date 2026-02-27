@@ -23,11 +23,13 @@ def register_invoice_tools(mcp: FastMCP) -> None:
         date: str = Field(..., description="Invoice date (YYYY-MM-DD)"),
         lines: List[InvoiceLine] = Field(..., description="Invoice lines"),
         project_id: Optional[int] = Field(None, description="Project ID"),
-        payment_mode_id: Optional[int] = Field(None, description="Payment mode ID")
+        payment_mode_id: Optional[int] = Field(None, description="Payment mode ID"),
+        note_public: Optional[str] = Field(None, description="Public note (visible on PDF)"),
+        note_private: Optional[str] = Field(None, description="Private note (internal only)")
     ) -> int:
         """Create a new invoice (draft). Returns the new invoice ID."""
         client = _require_client()
-            
+
         # 1. Create invoice header
         payload = {
             "socid": customer_id,
@@ -35,11 +37,15 @@ def register_invoice_tools(mcp: FastMCP) -> None:
             "type": 0,  # Standard invoice
             "statut": 0  # Draft
         }
-        
+
         if project_id:
             payload["fk_project"] = project_id
         if payment_mode_id:
             payload["mode_reglement_id"] = payment_mode_id
+        if note_public is not None:
+            payload["note_public"] = note_public
+        if note_private is not None:
+            payload["note_private"] = note_private
                 
         invoice_id = await client.create_invoice(payload)
         
@@ -156,20 +162,26 @@ def register_invoice_tools(mcp: FastMCP) -> None:
     async def update_invoice(
         invoice_id: int = Field(..., description="Invoice ID to update"),
         date: Optional[str] = Field(None, description="Invoice date (YYYY-MM-DD)"),
-        payment_mode_id: Optional[int] = Field(None, description="Payment mode ID")
+        payment_mode_id: Optional[int] = Field(None, description="Payment mode ID"),
+        note_public: Optional[str] = Field(None, description="Public note (visible on PDF)"),
+        note_private: Optional[str] = Field(None, description="Private note (internal only)")
     ) -> int:
         """Update an existing invoice (draft only)."""
         client = _require_client()
-            
+
         payload = {}
         if date:
             payload["date"] = date
         if payment_mode_id:
             payload["mode_reglement_id"] = payment_mode_id
-                
+        if note_public is not None:
+            payload["note_public"] = note_public
+        if note_private is not None:
+            payload["note_private"] = note_private
+
         if not payload:
             return invoice_id
-                
+
         return await client.update_invoice(invoice_id, payload)
 
     @mcp.tool()

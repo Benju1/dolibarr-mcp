@@ -143,6 +143,8 @@ class InvoiceResult(DolibarrBaseModel):
     status: int = Field(
         ..., description="Status (0=Draft, 1=Unpaid, 2=Paid, 3=Abandoned)"
     )
+    note_public: Optional[str] = Field(None, description="Public note (visible on PDF)")
+    note_private: Optional[str] = Field(None, description="Private note (internal only)")
     lines: Optional[list[InvoiceLineResult]] = Field(None, description="Invoice line items")
 
 
