@@ -35,7 +35,7 @@ class TestConfig:
     def test_config_defaults(self):
         """Test configuration defaults when env vars not set."""
         with patch.dict(os.environ, {}, clear=True):
-            config = Config()
+            config = Config(_env_file=None)
             assert config.log_level == 'INFO'  # Default log level
     
     def test_config_url_normalization(self):
@@ -64,7 +64,7 @@ class TestConfig:
         with patch.dict(os.environ, {'DOTENV_PATH': str(env_file)}):
             # Load from env file
             from dotenv import load_dotenv
-            load_dotenv(str(env_file))
+            load_dotenv(str(env_file), override=True)
             
             config = Config(
                 dolibarr_url=os.getenv('DOLIBARR_URL'),

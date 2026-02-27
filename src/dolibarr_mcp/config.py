@@ -7,9 +7,6 @@ from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
-# Load environment variables from .env file (but don't override existing env vars)
-load_dotenv(override=False)
-
 
 class Config(BaseSettings):
     """Configuration for Dolibarr MCP Server."""
@@ -117,6 +114,7 @@ class Config(BaseSettings):
     @classmethod
     def from_env(cls) -> "Config":
         """Create configuration from environment variables with validation."""
+        load_dotenv(override=False)
         try:
             config = cls(
                 dolibarr_url=(
