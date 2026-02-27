@@ -21,7 +21,7 @@ def register_invoice_tools(mcp: FastMCP) -> None:
     async def create_invoice(
         customer_id: int = Field(..., description="Customer ID (socid)"),
         date: str = Field(..., description="Invoice date (YYYY-MM-DD)"),
-        lines: List[InvoiceLine] = Field(..., description="Invoice lines"),
+        lines: Optional[List[InvoiceLine]] = Field(None, description="Invoice lines"),
         project_id: Optional[int] = Field(None, description="Project ID"),
         payment_mode_id: Optional[int] = Field(None, description="Payment mode ID"),
         note_public: Optional[str] = Field(None, description="Public note (visible on PDF)"),
@@ -46,35 +46,36 @@ def register_invoice_tools(mcp: FastMCP) -> None:
             payload["note_public"] = note_public
         if note_private is not None:
             payload["note_private"] = note_private
-                
+
         invoice_id = await client.create_invoice(payload)
-        
+
         # 2. Add lines individually
-        try:
-            for line in lines:
-                line_data = line.model_dump(exclude_none=True)
-                
-                # Map fields to Dolibarr API format
-                api_line = {}
-                if "description" in line_data:
-                    api_line["desc"] = line_data["description"]
-                if "unit_price" in line_data:
-                    api_line["subprice"] = str(line_data["unit_price"])
-                if "quantity" in line_data:
-                    api_line["qty"] = str(line_data["quantity"])
-                if "vat_rate" in line_data:
-                    api_line["tva_tx"] = str(line_data["vat_rate"])
-                if "product_id" in line_data:
-                    api_line["fk_product"] = line_data["product_id"]
-                if "product_type" in line_data:
-                    api_line["product_type"] = line_data["product_type"]
-                    
-                await client.add_invoice_line(invoice_id, api_line)
-        except Exception:
-            # Rollback: delete the invoice if line addition fails
-            await client.delete_invoice(invoice_id)
-            raise
-            
+        if lines:
+            try:
+                for line in lines:
+                    line_data = line.model_dump(exclude_none=True)
+
+                    # Map fields to Dolibarr API format
+                    api_line = {}
+                    if "description" in line_data:
+                        api_line["desc"] = line_data["description"]
+                    if "unit_price" in line_data:
+                        api_line["subprice"] = str(line_data["unit_price"])
+                    if "quantity" in line_data:
+                        api_line["qty"] = str(line_data["quantity"])
+                    if "vat_rate" in line_data:
+                        api_line["tva_tx"] = str(line_data["vat_rate"])
+                    if "product_id" in line_data:
+                        api_line["fk_product"] = line_data["product_id"]
+                    if "product_type" in line_data:
+                        api_line["product_type"] = line_data["product_type"]
+
+                    await client.add_invoice_line(invoice_id, api_line)
+            except Exception:
+                # Rollback: delete the invoice if line addition fails
+                await client.delete_invoice(invoice_id)
+                raise
+
         return invoice_id
 
     @mcp.tool()

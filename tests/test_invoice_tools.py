@@ -1,4 +1,4 @@
-"""Tests for Invoice MCP Tools (delete_invoice, update_invoice_line, delete_invoice_line)."""
+"""Tests for Invoice MCP Tools."""
 
 import sys
 import os
@@ -8,6 +8,7 @@ import pytest
 from unittest.mock import AsyncMock
 
 from dolibarr_mcp import state as state_module
+from dolibarr_mcp.models import InvoiceLine
 from dolibarr_mcp.tools.invoices import register_invoice_tools
 
 
@@ -111,3 +112,37 @@ async def test_update_invoice_line_no_fields_raises(mock_client, invoice_tools):
             invoice_id=10, line_id=7,
             description=None, unit_price=None, quantity=None, vat_rate=None,
         )
+
+
+@pytest.mark.asyncio
+async def test_create_invoice_without_lines(mock_client, invoice_tools):
+    """create_invoice without lines creates header only, no add_invoice_line calls."""
+    mock_client.create_invoice.return_value = 100
+
+    result = await invoice_tools["create_invoice"](
+        customer_id=1, date="2025-01-01", lines=None
+    )
+
+    assert result == 100
+    mock_client.create_invoice.assert_awaited_once()
+    mock_client.add_invoice_line.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_invoice_with_lines(mock_client, invoice_tools):
+    """create_invoice with lines creates header then adds each line."""
+    mock_client.create_invoice.return_value = 200
+    mock_client.add_invoice_line.return_value = 1
+
+    lines = [
+        InvoiceLine(desc="Line 1", subprice="10.00", qty="2", tva_tx="20.0"),
+        InvoiceLine(desc="Line 2", subprice="5.00", qty="1", tva_tx="10.0"),
+    ]
+
+    result = await invoice_tools["create_invoice"](
+        customer_id=1, date="2025-01-01", lines=lines
+    )
+
+    assert result == 200
+    mock_client.create_invoice.assert_awaited_once()
+    assert mock_client.add_invoice_line.await_count == 2
