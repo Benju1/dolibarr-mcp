@@ -112,24 +112,46 @@ def register_product_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def create_product(
-        ref: str = Field(..., description="Product reference"),
         label: str = Field(..., description="Product label"),
-        price: float = Field(..., description="Selling price"),
+        ref: Optional[str] = Field(None, description="Product reference (auto-generated if omitted)"),
+        price: float = Field(0.0, description="Selling price"),
         type: int = Field(0, description="Type (0=Product, 1=Service)"),
         description: Optional[str] = Field(None, description="Product description"),
-        tva_tx: float = Field(20.0, description="VAT rate")
+        tva_tx: float = Field(20.0, description="VAT rate"),
+        cost_price: Optional[float] = Field(None, description="Cost/purchase price"),
+        barcode: Optional[str] = Field(None, description="Barcode value"),
+        barcode_type_code: Optional[str] = Field(None, description="Barcode type code (e.g. EAN13, UPC)"),
+        status: Optional[int] = Field(None, description="Selling status (0=Not for sale, 1=For sale)"),
+        status_buy: Optional[int] = Field(None, description="Buying status (0=Not for purchase, 1=For purchase)"),
+        note_public: Optional[str] = Field(None, description="Public note"),
+        note_private: Optional[str] = Field(None, description="Private note"),
     ) -> int:
         """Create a new product. Returns the new product ID."""
         client = _require_client()
-            
+
         payload = {
-            "ref": ref,
             "label": label,
             "price": str(price),
             "type": type,
-            "tva_tx": str(tva_tx)
+            "tva_tx": str(tva_tx),
         }
-        if description:
+        if ref is not None:
+            payload["ref"] = ref
+        if description is not None:
             payload["description"] = description
-                
+        if cost_price is not None:
+            payload["cost_price"] = str(cost_price)
+        if barcode is not None:
+            payload["barcode"] = barcode
+        if barcode_type_code is not None:
+            payload["barcode_type_code"] = barcode_type_code
+        if status is not None:
+            payload["status"] = status
+        if status_buy is not None:
+            payload["status_buy"] = status_buy
+        if note_public is not None:
+            payload["note_public"] = note_public
+        if note_private is not None:
+            payload["note_private"] = note_private
+
         return await client.create_product(payload)

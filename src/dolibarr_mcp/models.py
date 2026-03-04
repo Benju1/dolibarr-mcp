@@ -160,6 +160,13 @@ class ProductResult(DolibarrBaseModel):
     price_ttc: ScientificDecimal = Field(..., description="Selling price including tax")
     tva_tx: ScientificDecimal = Field(..., description="VAT rate")
     stock_reel: Optional[float] = Field(None, description="Current stock")
+    cost_price: Optional[ScientificDecimal] = Field(None, description="Cost/purchase price")
+    barcode: Optional[str] = Field(None, description="Barcode value")
+    barcode_type_code: Optional[str] = Field(None, description="Barcode type (e.g. EAN13)")
+    status: Optional[int] = Field(None, description="Selling status (0=Not for sale, 1=For sale)")
+    status_buy: Optional[int] = Field(None, description="Buying status (0=Not for purchase, 1=For purchase)")
+    note_public: Optional[str] = Field(None, description="Public note")
+    note_private: Optional[str] = Field(None, description="Private note")
 
     @field_validator("type", mode="before")
     @classmethod
