@@ -79,6 +79,8 @@ class ProjectSearchResult(DolibarrBaseModel):
     title: str = Field(..., description="Project title")
     socid: Optional[int] = Field(None, description="Associated customer ID (socid)")
     status: int = Field(..., description="Project status")
+    fk_opp_status: Optional[int] = Field(None, description="Opportunity/lead status ID (set if project is a lead)")
+    opp_amount: Optional[float] = Field(None, description="Opportunity amount")
     description: Optional[str] = Field(None, description="Project description")
     date_creation: Optional[int] = Field(None, description="Creation timestamp")
     date_modification: Optional[int] = Field(None, description="Modification timestamp")
