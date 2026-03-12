@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # Entschlüssele .env.enc → .env (überschreibt lokale .env)
-sops -d .env.enc > .env
+sops --input-type dotenv --output-type dotenv -d .env.enc > .env
 
 # Starte den MCP-Server
 # Hinweis: Script endet nicht bis Server beendet wird (STDIO-Transport)
