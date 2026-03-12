@@ -666,11 +666,11 @@ class DolibarrClient:
     # PROJECT MANAGEMENT
     # ============================================================================
     
-    async def get_projects(self, limit: int = 100, page: int = 1, status: Optional[int] = None) -> List[Dict[str, Any]]:
+    async def get_projects(self, limit: int = 100, page: int = 0, status: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get list of projects."""
         params: Dict[str, Any] = {"limit": limit, "page": page}
         if status is not None:
-            params["status"] = status
+            params["sqlfilters"] = f"(t.fk_statut:=:{status})"
         result = await self.request("GET", "projects", params=params)
         return result if isinstance(result, list) else []
 

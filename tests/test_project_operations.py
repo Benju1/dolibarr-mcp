@@ -109,4 +109,4 @@ class TestProjectOperations:
             
             assert params["limit"] == 50
             assert params["page"] == 2
-            assert params["status"] == 1
+            assert params["sqlfilters"] == "(t.fk_statut:=:1)"
