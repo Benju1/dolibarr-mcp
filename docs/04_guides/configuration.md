@@ -23,6 +23,23 @@ The [`Config` class](../src/dolibarr_mcp/config.py) is built with
 legacy variable names and raises a descriptive error if placeholder credentials
 are detected.
 
+## Claude Code `.mcp.json` Einbindung
+
+Claude Code unterstützt native `${HOME}` Expansion in `.mcp.json`. **Kein `bash -c` Umweg nötig.**
+
+```json
+{
+  "mcpServers": {
+    "dolibarr": {
+      "command": "${HOME}/dev/dolibarr-mcp/start-with-sops.sh",
+      "args": []
+    }
+  }
+}
+```
+
+Hinweis: `~` wird **nicht** unterstützt, nur `${HOME}`.
+
 ## Testing credentials
 
 Use the standalone helper to verify that the credentials are accepted by
