@@ -93,6 +93,7 @@ class CustomerResult(DolibarrBaseModel):
     name: str = Field(..., alias="nom", description="Customer name")
     name_alias: Optional[str] = Field(None, description="Alias name")
     code_client: Optional[str] = Field(None, description="Customer code")
+    code_fournisseur: Optional[str] = Field(None, description="Supplier code")
     email: Optional[str] = Field(None, description="Email address")
     phone: Optional[str] = Field(None, description="Phone number")
     address: Optional[str] = Field(None, description="Address")
@@ -101,6 +102,7 @@ class CustomerResult(DolibarrBaseModel):
     status: int = Field(..., description="Status (1=Active, 0=Inactive)")
     client: int = Field(..., description="Is customer (1=Yes, 0=No)")
     fournisseur: int = Field(..., description="Is supplier (1=Yes, 0=No)")
+    idprof1: Optional[str] = Field(None, description="Professional ID 1 (UID/SIREN etc.)")
 
 
 class InvoiceLine(DolibarrBaseModel):

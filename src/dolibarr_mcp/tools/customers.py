@@ -65,22 +65,24 @@ def register_customer_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def create_customer(
-        name: str = Field(..., description="Customer name"),
-        client_type: int = Field(1, description="Client type (1=Customer, 2=Prospect, 3=Both)"),
+        name: str = Field(..., description="Customer/supplier name"),
+        thirdparty_type: int = Field(1, description="Type (1=Customer, 2=Supplier, 3=Both, 0=Neither/Prospect)"),
         email: Optional[str] = Field(None, description="Email address"),
         phone: Optional[str] = Field(None, description="Phone number"),
         address: Optional[str] = Field(None, description="Address"),
         town: Optional[str] = Field(None, description="City/Town"),
         zip_code: Optional[str] = Field(None, description="Postal code"),
-        country_id: int = Field(1, description="Country ID (default: 1)")
+        country_id: int = Field(1, description="Country ID (default: 1)"),
+        idprof1: Optional[str] = Field(None, description="Professional ID 1 (e.g. UID/SIREN)")
     ) -> int:
-        """Create a new customer/third party."""
+        """Create a new customer/supplier/third party."""
         client = _require_client()
-            
+
         payload = {
             "name": name,
-            "client": client_type,
+            "type": thirdparty_type,
             "code_client": -1,  # Auto-generate code
+            "code_fournisseur": -1,  # Auto-generate supplier code
             "country_id": country_id
         }
         if email:
@@ -93,7 +95,9 @@ def register_customer_tools(mcp: FastMCP) -> None:
             payload["town"] = town
         if zip_code:
             payload["zip"] = zip_code
-                
+        if idprof1:
+            payload["idprof1"] = idprof1
+
         return await client.create_customer(payload)
 
     @mcp.tool()
