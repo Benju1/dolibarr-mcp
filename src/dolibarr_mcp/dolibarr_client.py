@@ -473,6 +473,11 @@ class DolibarrClient:
         }
         return await self.request("POST", f"invoices/{invoice_id}/validate", data=payload)
 
+    async def set_invoice_to_draft(self, invoice_id: int, warehouse_id: int = -1) -> Dict[str, Any]:
+        """Set a validated invoice back to draft status."""
+        payload = {"idwarehouse": warehouse_id}
+        return await self.request("POST", f"invoices/{invoice_id}/settodraft", data=payload)
+
     async def add_payment_to_invoice(self, invoice_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
         """Add a payment to an invoice."""
         return await self.request("POST", f"invoices/{invoice_id}/payments", data=data)

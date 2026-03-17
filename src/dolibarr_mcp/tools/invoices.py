@@ -183,6 +183,19 @@ def register_invoice_tools(mcp: FastMCP) -> None:
         return await client.validate_invoice(invoice_id)
 
     @mcp.tool()
+    async def set_invoice_to_draft(
+        invoice_id: int = Field(..., description="Invoice ID to set back to draft")
+    ) -> InvoiceResult:
+        """Set a validated invoice back to draft status.
+
+        After setting to draft, you can update/delete lines and re-validate.
+        """
+        client = _require_client()
+        await client.set_invoice_to_draft(invoice_id)
+        result = await client.get_invoice_by_id(invoice_id)
+        return InvoiceResult(**result)
+
+    @mcp.tool()
     async def add_payment_to_invoice(
         invoice_id: int = Field(..., description="Invoice ID"),
         date: str = Field(..., description="Payment date (YYYY-MM-DD)"),
