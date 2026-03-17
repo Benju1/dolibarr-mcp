@@ -90,3 +90,7 @@ logs/
 *.bak
 *.swp
 *~
+
+# Claude Code (local config)
+.claude/
+.mcp.json
