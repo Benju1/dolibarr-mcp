@@ -64,6 +64,9 @@ async def test_delete_invoice_line_calls_client(mock_client, invoice_tools):
 @pytest.mark.asyncio
 async def test_update_invoice_line_calls_client(mock_client, invoice_tools):
     """update_invoice_line maps fields correctly and calls client."""
+    mock_client.get_invoice_by_id.return_value = {
+        "lines": [{"id": 7, "desc": "Old desc", "subprice": "50.0", "qty": "1", "tva_tx": "7.0", "product_type": 0}]
+    }
     mock_client.update_invoice_line.return_value = None
 
     result = await invoice_tools["update_invoice_line"](
@@ -84,23 +87,36 @@ async def test_update_invoice_line_calls_client(mock_client, invoice_tools):
             "subprice": "99.5",
             "qty": "3.0",
             "tva_tx": "19.0",
+            "product_type": 0,
         },
     )
 
 
 @pytest.mark.asyncio
-async def test_update_invoice_line_partial_update(mock_client, invoice_tools):
-    """update_invoice_line sends only the provided fields."""
+async def test_update_invoice_line_partial_preserves_existing(mock_client, invoice_tools):
+    """update_invoice_line with only some fields preserves existing line data."""
+    mock_client.get_invoice_by_id.return_value = {
+        "lines": [
+            {"id": 7, "desc": "Original description", "subprice": "100.0", "qty": "2", "tva_tx": "7.0", "product_type": 1, "fk_product": 42}
+        ]
+    }
     mock_client.update_invoice_line.return_value = None
 
     result = await invoice_tools["update_invoice_line"](
         invoice_id=10, line_id=7,
-        description=None, unit_price=None, quantity=5.0, vat_rate=None,
+        description=None, unit_price=None, quantity=None, vat_rate=19.0,
     )
 
     assert result == 7
     mock_client.update_invoice_line.assert_awaited_once_with(
-        10, 7, {"qty": "5.0"}
+        10, 7, {
+            "desc": "Original description",
+            "subprice": "100.0",
+            "qty": "2",
+            "tva_tx": "19.0",
+            "product_type": 1,
+            "fk_product": 42,
+        }
     )
 
 

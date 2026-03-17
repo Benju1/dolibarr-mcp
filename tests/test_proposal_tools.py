@@ -16,6 +16,32 @@ from dolibarr_mcp.tools.proposals import register_proposal_tools
 
 # Helper: Register tools and mock client
 @pytest.fixture
+def mock_client():
+    """Create a mock client and inject it into global state."""
+    client = AsyncMock()
+    state_module.set_client(client)
+    yield client
+    state_module.set_client(None)
+
+
+@pytest.fixture
+def proposal_tools_fns():
+    """Register proposal tools and capture the inner functions."""
+    mcp = AsyncMock()
+    registered = {}
+
+    def tool_decorator():
+        def wrapper(fn):
+            registered[fn.__name__] = fn
+            return fn
+        return wrapper
+
+    mcp.tool = tool_decorator
+    register_proposal_tools(mcp)
+    return registered
+
+
+@pytest.fixture
 def proposal_tools():
     """Register proposal tools for testing."""
     mcp = AsyncMock()
@@ -227,8 +253,36 @@ async def test_convert_proposal_to_order_returns_order_id():
         "id": 999,
         "ref": "ORD-2025-001"
     }
-    
+
     state_module.set_client(mock_client)
     result = state_module.get_client()
     assert result is mock_client
     state_module.set_client(None)
+
+
+@pytest.mark.asyncio
+async def test_update_proposal_line_partial_preserves_existing(mock_client, proposal_tools_fns):
+    """update_proposal_line with only some fields preserves existing line data."""
+    mock_client.get_proposal_by_id.return_value = {
+        "lines": [
+            {"id": 7, "desc": "Original service", "subprice": "200.0", "qty": "3", "tva_tx": "7.0", "product_type": 1, "fk_product": 55}
+        ]
+    }
+    mock_client.update_proposal_line.return_value = None
+
+    result = await proposal_tools_fns["update_proposal_line"](
+        proposal_id=10, line_id=7,
+        description=None, unit_price=None, quantity=None, vat_rate=Decimal("19.0"),
+    )
+
+    assert result == 7
+    mock_client.update_proposal_line.assert_awaited_once_with(
+        10, 7, {
+            "desc": "Original service",
+            "subprice": "200.0",
+            "qty": "3",
+            "tva_tx": "19.0",
+            "product_type": 1,
+            "fk_product": 55,
+        }
+    )

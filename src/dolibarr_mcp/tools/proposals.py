@@ -212,25 +212,45 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         vat_rate: Optional[Decimal] = Field(None, description="VAT rate (%)")
     ) -> int:
         """Update a line in a proposal.
-        
+
         Provide only the fields you want to update.
         Returns the updated line ID.
         """
         client = _require_client()
-        
-        payload = {}
+
+        if all(v is None for v in (description, unit_price, quantity, vat_rate)):
+            raise ValueError("At least one field must be provided for update")
+
+        # Fetch current line data to preserve unprovided fields
+        proposal_data = await client.get_proposal_by_id(proposal_id)
+        current_line = None
+        for line in proposal_data.get("lines", []):
+            if int(line.get("id", 0)) == line_id:
+                current_line = line
+                break
+        if current_line is None:
+            raise ValueError(f"Line {line_id} not found in proposal {proposal_id}")
+
+        # Build payload from current values, override with provided values
+        payload = {
+            "desc": current_line.get("desc", ""),
+            "subprice": str(current_line.get("subprice", 0)),
+            "qty": str(current_line.get("qty", 0)),
+            "tva_tx": str(current_line.get("tva_tx", 0)),
+            "product_type": current_line.get("product_type", 0),
+        }
+        if current_line.get("fk_product"):
+            payload["fk_product"] = current_line["fk_product"]
+
         if description is not None:
             payload["desc"] = description
         if unit_price is not None:
-            payload["subprice"] = str(unit_price)  # Send as string to avoid float rounding
+            payload["subprice"] = str(unit_price)
         if quantity is not None:
             payload["qty"] = str(quantity)
         if vat_rate is not None:
             payload["tva_tx"] = str(vat_rate)
-        
-        if not payload:
-            raise ValueError("At least one field must be provided for update")
-        
+
         result = await client.update_proposal_line(proposal_id, line_id, payload)
         return line_id
 
