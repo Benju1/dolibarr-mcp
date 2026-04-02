@@ -185,6 +185,60 @@ class TestProjectOperations:
                 await client.remove_project_contact(200, 151, "PROJECTCONTRIBUTOR")
 
 
+class TestCreateProjectTool:
+    """Tests for the create_project MCP tool."""
+
+    @pytest.fixture
+    def mock_client(self):
+        client = AsyncMock()
+        state_module.set_client(client)
+        yield client
+        state_module.set_client(None)
+
+    @pytest.fixture
+    def project_tools(self):
+        mcp = AsyncMock()
+        registered = {}
+
+        def tool_decorator():
+            def wrapper(fn):
+                registered[fn.__name__] = fn
+                return fn
+            return wrapper
+
+        mcp.tool = tool_decorator
+        register_project_tools(mcp)
+        return registered
+
+    @pytest.mark.asyncio
+    async def test_create_project_without_ref(self, mock_client, project_tools):
+        """Omitting ref sends 'auto' to trigger Dolibarr's numbering module."""
+        mock_client.create_project.return_value = 42
+
+        result = await project_tools["create_project"](
+            title="Test Project", ref=None, socid=None,
+            description=None, status=1,
+        )
+
+        payload = mock_client.create_project.call_args[0][0]
+        assert payload["ref"] == "auto"
+        assert result == 42
+
+    @pytest.mark.asyncio
+    async def test_create_project_with_explicit_ref(self, mock_client, project_tools):
+        """Explicit ref is passed through as-is."""
+        mock_client.create_project.return_value = 43
+
+        result = await project_tools["create_project"](
+            title="Test Project", ref="CUSTOM-001", socid=None,
+            description=None, status=1,
+        )
+
+        payload = mock_client.create_project.call_args[0][0]
+        assert payload["ref"] == "CUSTOM-001"
+        assert result == 43
+
+
 class TestUpdateProjectTool:
     """Tests for the update_project MCP tool."""
 
