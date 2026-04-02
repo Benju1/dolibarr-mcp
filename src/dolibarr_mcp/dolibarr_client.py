@@ -704,6 +704,24 @@ class DolibarrClient:
         """Delete a project."""
         return await self.request("DELETE", f"projects/{project_id}")
 
+    async def add_project_contact(
+        self, project_id: int, data: Optional[Dict[str, Any]] = None, **kwargs,
+    ) -> Dict[str, Any]:
+        """Add a contact to a project."""
+        payload = self._merge_payload(data, **kwargs)
+        return await self.request("POST", f"projects/{project_id}/contacts", data=payload)
+
+    async def get_project_contacts(self, project_id: int) -> List[Dict[str, Any]]:
+        """Get contacts assigned to a project."""
+        result = await self.request("GET", f"projects/{project_id}/contacts")
+        return result if isinstance(result, list) else []
+
+    async def remove_project_contact(
+        self, project_id: int, contact_id: int, type_contact: str,
+    ) -> Dict[str, Any]:
+        """Remove a contact from a project."""
+        return await self.request("DELETE", f"projects/{project_id}/contact/{contact_id}/{type_contact}")
+
     # ============================================================================
     # RAW API CALL
     # ============================================================================

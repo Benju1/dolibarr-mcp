@@ -110,3 +110,47 @@ class TestProjectOperations:
             assert params["limit"] == 50
             assert params["page"] == 2
             assert params["sqlfilters"] == "(t.fk_statut:=:1)"
+
+    @pytest.mark.asyncio
+    async def test_add_project_contact(self, client):
+        """Test adding a contact to a project."""
+        with patch.object(client, 'request') as mock_request:
+            mock_request.return_value = 42
+            result = await client.add_project_contact(200, {
+                "fk_socpeople": 151,
+                "type_contact": "PROJECTCONTRIBUTOR",
+                "source": "external",
+            })
+            assert result == 42
+            mock_request.assert_called_once_with(
+                "POST", "projects/200/contacts",
+                data={
+                    "fk_socpeople": 151,
+                    "type_contact": "PROJECTCONTRIBUTOR",
+                    "source": "external",
+                }
+            )
+
+    @pytest.mark.asyncio
+    async def test_get_project_contacts(self, client):
+        """Test getting contacts assigned to a project."""
+        with patch.object(client, 'request') as mock_request:
+            mock_request.return_value = [
+                {"id": 1, "fk_socpeople": 151, "type_contact": "PROJECTCONTRIBUTOR",
+                 "source": "external", "lastname": "Mueller", "firstname": "Michael"},
+            ]
+            result = await client.get_project_contacts(200)
+            assert len(result) == 1
+            assert result[0]["fk_socpeople"] == 151
+            mock_request.assert_called_once_with("GET", "projects/200/contacts")
+
+    @pytest.mark.asyncio
+    async def test_remove_project_contact(self, client):
+        """Test removing a contact from a project."""
+        with patch.object(client, 'request') as mock_request:
+            mock_request.return_value = {"success": True}
+            result = await client.remove_project_contact(200, 151, "PROJECTCONTRIBUTOR")
+            assert result["success"] is True
+            mock_request.assert_called_once_with(
+                "DELETE", "projects/200/contact/151/PROJECTCONTRIBUTOR"
+            )

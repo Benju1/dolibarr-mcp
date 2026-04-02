@@ -86,6 +86,17 @@ class ProjectSearchResult(DolibarrBaseModel):
     date_modification: Optional[int] = Field(None, description="Modification timestamp")
 
 
+class ProjectContactResult(DolibarrBaseModel):
+    """A contact assigned to a project."""
+
+    id: int = Field(..., description="Contact link ID")
+    fk_socpeople: int = Field(..., description="Contact ID")
+    type_contact: str = Field(..., description="Contact type code (e.g. PROJECTCONTRIBUTOR)")
+    source: str = Field(..., description="'internal' or 'external'")
+    lastname: Optional[str] = Field(None, description="Contact last name")
+    firstname: Optional[str] = Field(None, description="Contact first name")
+
+
 class CustomerResult(DolibarrBaseModel):
     """Structured customer/thirdparty result."""
 

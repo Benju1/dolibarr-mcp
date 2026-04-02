@@ -7,7 +7,7 @@ from fastmcp import FastMCP
 from pydantic import Field
 
 from ..dolibarr_client import DolibarrClient
-from ..models import ProjectSearchResult
+from ..models import ProjectContactResult, ProjectSearchResult
 
 
 def _require_client() -> DolibarrClient:
@@ -134,3 +134,39 @@ def register_project_tools(mcp: FastMCP) -> None:
             payload["description"] = description
             
         return await client.create_project(payload)
+
+    @mcp.tool()
+    async def add_project_contact(
+        project_id: int = Field(..., description="Project ID"),
+        contact_id: int = Field(..., description="Contact ID (from get_contacts)"),
+        type_contact: str = Field(..., description="Contact type code, e.g. 'PROJECTCONTRIBUTOR', 'PROJECTLEADER'"),
+        source: str = Field(..., description="'internal' (Dolibarr user) or 'external' (third-party contact)")
+    ) -> int:
+        """Add a contact to a project. Returns the contact link ID."""
+        client = _require_client()
+        payload = {
+            "fk_socpeople": contact_id,
+            "type_contact": type_contact,
+            "source": source,
+        }
+        return await client.add_project_contact(project_id, payload)
+
+    @mcp.tool()
+    async def get_project_contacts(
+        project_id: int = Field(..., description="Project ID"),
+    ) -> List[ProjectContactResult]:
+        """Get all contacts assigned to a project."""
+        client = _require_client()
+        result = await client.get_project_contacts(project_id)
+        return [ProjectContactResult(**item) for item in result]
+
+    @mcp.tool()
+    async def remove_project_contact(
+        project_id: int = Field(..., description="Project ID"),
+        contact_id: int = Field(..., description="Contact ID to remove"),
+        type_contact: str = Field(..., description="Contact type code (e.g. 'PROJECTCONTRIBUTOR')"),
+    ) -> bool:
+        """Remove a contact from a project."""
+        client = _require_client()
+        await client.remove_project_contact(project_id, contact_id, type_contact)
+        return True
