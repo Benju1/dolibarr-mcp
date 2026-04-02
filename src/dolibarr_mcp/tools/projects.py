@@ -114,7 +114,7 @@ def register_project_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def create_project(
         title: str = Field(..., description="Project title"),
-        ref: Optional[str] = Field(None, description="Project reference (auto-generated if empty)"),
+        ref: Optional[str] = Field(None, description="Project reference. If omitted, Dolibarr auto-generates via its numbering module"),
         socid: Optional[int] = Field(None, description="Customer ID"),
         description: Optional[str] = Field(None, description="Project description"),
         status: int = Field(1, description="Initial status (0=Draft, 1=Open)")
@@ -124,10 +124,9 @@ def register_project_tools(mcp: FastMCP) -> None:
             
         payload = {
             "title": title,
+            "ref": ref or "auto",
             "status": status
         }
-        if ref:
-            payload["ref"] = ref
         if socid:
             payload["socid"] = socid
         if description:
