@@ -134,3 +134,42 @@ def register_project_tools(mcp: FastMCP) -> None:
             payload["description"] = description
             
         return await client.create_project(payload)
+
+    @mcp.tool()
+    async def update_project(
+        project_id: int = Field(..., description="Project ID to update"),
+        title: Optional[str] = Field(None, description="Project title"),
+        description: Optional[str] = Field(None, description="Project description"),
+        status: Optional[int] = Field(None, description="Project status (0=Draft, 1=Open, 2=Closed)"),
+        socid: Optional[int] = Field(None, description="Customer ID (third-party)"),
+        usage_opportunity: Optional[int] = Field(None, description="Enable Lead/Opportunity tracking (0=No, 1=Yes)"),
+        fk_opp_status: Optional[int] = Field(None, description="Lead/Opportunity status ID"),
+        opp_amount: Optional[float] = Field(None, description="Opportunity amount"),
+        opp_percent: Optional[float] = Field(None, description="Opportunity probability (0-100)"),
+    ) -> ProjectSearchResult:
+        """Update an existing project. Only provided fields are changed."""
+        client = _require_client()
+
+        payload = {}
+        if title is not None:
+            payload["title"] = title
+        if description is not None:
+            payload["description"] = description
+        if status is not None:
+            payload["status"] = status
+        if socid is not None:
+            payload["socid"] = socid
+        if usage_opportunity is not None:
+            payload["usage_opportunity"] = usage_opportunity
+        if fk_opp_status is not None:
+            payload["fk_opp_status"] = fk_opp_status
+        if opp_amount is not None:
+            payload["opp_amount"] = opp_amount
+        if opp_percent is not None:
+            payload["opp_percent"] = opp_percent
+
+        if payload:
+            await client.update_project(project_id, payload)
+
+        result = await client.get_project_by_id(project_id)
+        return ProjectSearchResult(**result)
