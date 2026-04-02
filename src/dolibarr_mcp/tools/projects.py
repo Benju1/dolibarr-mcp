@@ -181,7 +181,7 @@ def register_project_tools(mcp: FastMCP) -> None:
         type_contact: str = Field(..., description="Contact type code, e.g. 'PROJECTCONTRIBUTOR', 'PROJECTLEADER'"),
         source: str = Field(..., description="'internal' (Dolibarr user) or 'external' (third-party contact)")
     ) -> int:
-        """Add a contact to a project. Returns the contact link ID."""
+        """Add a contact to a project. Returns the contact link ID. Requires Dolibarr 21.0+."""
         client = _require_client()
         payload = {
             "fk_socpeople": contact_id,
@@ -194,7 +194,7 @@ def register_project_tools(mcp: FastMCP) -> None:
     async def get_project_contacts(
         project_id: int = Field(..., description="Project ID"),
     ) -> List[ProjectContactResult]:
-        """Get all contacts assigned to a project."""
+        """Get all contacts assigned to a project. Requires Dolibarr 21.0+."""
         client = _require_client()
         result = await client.get_project_contacts(project_id)
         return [ProjectContactResult(**item) for item in result]
@@ -205,7 +205,7 @@ def register_project_tools(mcp: FastMCP) -> None:
         contact_id: int = Field(..., description="Contact ID to remove"),
         type_contact: str = Field(..., description="Contact type code (e.g. 'PROJECTCONTRIBUTOR')"),
     ) -> bool:
-        """Remove a contact from a project."""
+        """Remove a contact from a project. Requires Dolibarr 21.0+."""
         client = _require_client()
         await client.remove_project_contact(project_id, contact_id, type_contact)
         return True
