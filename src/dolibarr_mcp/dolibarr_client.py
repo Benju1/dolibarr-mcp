@@ -633,9 +633,11 @@ class DolibarrClient:
     # CONTACT MANAGEMENT
     # ============================================================================
     
-    async def get_contacts(self, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_contacts(self, limit: int = 100, page: int = 0, sqlfilters: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get list of contacts."""
-        params = {"limit": limit}
+        params = {"limit": limit, "page": page}
+        if sqlfilters:
+            params["sqlfilters"] = sqlfilters
         result = await self.request("GET", "contacts", params=params)
         return result if isinstance(result, list) else []
     
