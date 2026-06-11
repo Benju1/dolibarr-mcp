@@ -104,18 +104,26 @@ def register_customer_tools(mcp: FastMCP) -> None:
     async def update_customer(
         customer_id: int = Field(..., description="Customer ID to update"),
         name: Optional[str] = Field(None, description="Customer name"),
+        name_alias: Optional[str] = Field(None, description="Alias / short name"),
         email: Optional[str] = Field(None, description="Email address"),
         phone: Optional[str] = Field(None, description="Phone number"),
         address: Optional[str] = Field(None, description="Address"),
         town: Optional[str] = Field(None, description="City/Town"),
-        zip_code: Optional[str] = Field(None, description="Postal code")
+        zip_code: Optional[str] = Field(None, description="Postal code"),
+        country_id: Optional[int] = Field(None, description="Country ID (e.g. 41=Austria, 1=France)"),
+        idprof1: Optional[str] = Field(None, description="Professional ID 1 (e.g. Firmenbuchnummer/SIREN)"),
+        tva_intra: Optional[str] = Field(None, description="Intra-community VAT number (e.g. ATU12345678)"),
+        url: Optional[str] = Field(None, description="Website URL"),
+        fax: Optional[str] = Field(None, description="Fax number")
     ) -> int:
         """Update an existing customer."""
         client = _require_client()
-            
+
         payload = {}
         if name:
             payload["name"] = name
+        if name_alias:
+            payload["name_alias"] = name_alias
         if email:
             payload["email"] = email
         if phone:
@@ -126,8 +134,18 @@ def register_customer_tools(mcp: FastMCP) -> None:
             payload["town"] = town
         if zip_code:
             payload["zip"] = zip_code
-                
+        if country_id is not None:
+            payload["country_id"] = country_id
+        if idprof1:
+            payload["idprof1"] = idprof1
+        if tva_intra:
+            payload["tva_intra"] = tva_intra
+        if url:
+            payload["url"] = url
+        if fax:
+            payload["fax"] = fax
+
         if not payload:
             return customer_id
-                
+
         return await client.update_customer(customer_id, payload)

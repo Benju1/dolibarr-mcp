@@ -59,10 +59,28 @@ class TestCRUDOperations:
             customer = await client.get_customer_by_id(1)
             assert customer["name"] == "Test Company"
             
-            # Update
+            # Update basic field
             mock_request.return_value = {"id": 1, "name": "Updated Company"}
             result = await client.update_customer(1, {"name": "Updated Company"})
             assert result["name"] == "Updated Company"
+
+            # Update with extended fields (idprof1, tva_intra, etc.)
+            mock_request.return_value = {
+                "id": 1,
+                "name": "Updated Company",
+                "idprof1": "FN16036h",
+                "tva_intra": "ATU36652804",
+                "name_alias": "Reisegger",
+                "url": "https://www.reisegger.com",
+            }
+            result = await client.update_customer(1, {
+                "idprof1": "FN16036h",
+                "tva_intra": "ATU36652804",
+                "name_alias": "Reisegger",
+                "url": "https://www.reisegger.com",
+            })
+            assert result["idprof1"] == "FN16036h"
+            assert result["tva_intra"] == "ATU36652804"
             
             # Delete
             mock_request.return_value = {"success": True}

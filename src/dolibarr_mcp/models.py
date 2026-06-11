@@ -114,6 +114,10 @@ class CustomerResult(DolibarrBaseModel):
     client: int = Field(..., description="Is customer (1=Yes, 0=No)")
     fournisseur: int = Field(..., description="Is supplier (1=Yes, 0=No)")
     idprof1: Optional[str] = Field(None, description="Professional ID 1 (UID/SIREN etc.)")
+    tva_intra: Optional[str] = Field(None, description="Intra-community VAT number (e.g. ATU12345678)")
+    country_id: Optional[int] = Field(None, description="Country ID")
+    url: Optional[str] = Field(None, description="Website URL")
+    fax: Optional[str] = Field(None, description="Fax number")
 
 
 class InvoiceLine(DolibarrBaseModel):
