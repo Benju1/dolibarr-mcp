@@ -199,18 +199,42 @@ def register_invoice_tools(mcp: FastMCP) -> None:
     async def add_payment_to_invoice(
         invoice_id: int = Field(..., description="Invoice ID"),
         date: str = Field(..., description="Payment date (YYYY-MM-DD)"),
-        payment_mode_id: int = Field(..., description="Payment mode ID (paymentid)"),
-        account_id: int = Field(..., ge=1, description="Bank account ID (accountid)"),
+        payment_mode_id: Optional[int] = Field(None, description="Payment mode ID. Auto-resolved to wire transfer if omitted."),
+        account_id: Optional[int] = Field(None, description="Bank account ID. Auto-resolved if only one account exists."),
         num_payment: Optional[str] = Field(None, description="Payment reference number"),
-        close_paid: bool = Field(False, description="Close invoice as paid if fully paid")
+        close_paid: bool = Field(True, description="Close invoice as paid if fully paid")
     ) -> int:
         """Add a payment to an invoice (full remainder).
-        
+
         This tool pays the remaining unpaid amount of the invoice.
-        For partial payments, please use the Dolibarr UI or check API capabilities.
+        Bank account and payment mode are auto-resolved when omitted:
+        - account_id: uses the sole bank account (errors if multiple exist)
+        - payment_mode_id: uses wire transfer (Virement/VIR)
         """
         client = _require_client()
-            
+
+        if account_id is None:
+            accounts = await client.get_bank_accounts()
+            if len(accounts) == 1:
+                account_id = int(accounts[0]["id"])
+            elif len(accounts) == 0:
+                raise ValueError("No bank accounts configured in Dolibarr")
+            else:
+                labels = [f"  - ID {a['id']}: {a.get('label', a.get('ref', '?'))}" for a in accounts]
+                raise ValueError(
+                    f"Multiple bank accounts found, please specify account_id:\n" + "\n".join(labels)
+                )
+
+        if payment_mode_id is None:
+            modes = await client.get_payment_modes()
+            vir = next((m for m in modes if m.get("code") == "VIR"), None)
+            if vir:
+                payment_mode_id = int(vir["id"])
+            elif modes:
+                payment_mode_id = int(modes[0]["id"])
+            else:
+                raise ValueError("No payment modes configured in Dolibarr")
+
         payload = {
             "datepaye": date,
             "paymentid": payment_mode_id,
@@ -218,7 +242,7 @@ def register_invoice_tools(mcp: FastMCP) -> None:
             "accountid": account_id,
             "num_payment": num_payment or "",
         }
-        
+
         return await client.add_payment_to_invoice(invoice_id, payload)
 
     @mcp.tool()

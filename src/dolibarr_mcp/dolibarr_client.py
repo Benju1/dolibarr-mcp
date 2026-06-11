@@ -481,7 +481,17 @@ class DolibarrClient:
     async def add_payment_to_invoice(self, invoice_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
         """Add a payment to an invoice."""
         return await self.request("POST", f"invoices/{invoice_id}/payments", data=data)
-    
+
+    async def get_bank_accounts(self) -> List[Dict[str, Any]]:
+        """Get list of bank accounts."""
+        result = await self.request("GET", "bankaccounts")
+        return result if isinstance(result, list) else []
+
+    async def get_payment_modes(self) -> List[Dict[str, Any]]:
+        """Get available payment modes from the dictionary."""
+        result = await self.request("GET", "setup/dictionary/payment_types")
+        return result if isinstance(result, list) else []
+
     # ============================================================================
     # PROPOSAL MANAGEMENT
     # ============================================================================
