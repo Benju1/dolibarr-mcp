@@ -23,6 +23,7 @@ from .tools.contacts import register_contact_tools
 from .tools.invoices import register_invoice_tools
 from .tools.orders import register_order_tools
 from .tools.products import register_product_tools
+from .tools.purchasing_prices import register_purchasing_price_tools
 from .tools.system import register_system_tools
 
 
@@ -85,6 +86,7 @@ register_contact_tools(mcp)
 register_invoice_tools(mcp)
 register_order_tools(mcp)
 register_product_tools(mcp)
+register_purchasing_price_tools(mcp)
 register_system_tools(mcp)
 
 

@@ -253,6 +253,24 @@ class ProposalResult(DolibarrBaseModel):
     lines: Optional[list[ProposalLine]] = Field(None, description="Proposal line items")
 
 
+class PurchasingPriceResult(DolibarrBaseModel):
+    """Supplier purchasing price for a product."""
+
+    id: int = Field(..., description="Purchasing price entry ID")
+    fk_product: int = Field(..., description="Product ID")
+    fk_soc: int = Field(..., description="Supplier thirdparty ID")
+    ref_fourn: Optional[str] = Field(None, description="Supplier's product reference")
+    price: Optional[ScientificDecimal] = Field(None, description="Purchase price (HT)")
+    quantity: Optional[ScientificDecimal] = Field(None, alias="fourn_qty", description="Minimum quantity for this price")
+    tva_tx: Optional[ScientificDecimal] = Field(None, description="VAT rate (%)")
+    remise_percent: Optional[ScientificDecimal] = Field(None, description="Discount percentage")
+    multicurrency_code: Optional[str] = Field(None, description="Currency code (e.g. EUR, USD)")
+    multicurrency_unitprice: Optional[ScientificDecimal] = Field(None, description="Unit price in foreign currency")
+    delivery_time_days: Optional[int] = Field(None, description="Delivery time in days")
+    datec: Optional[str] = Field(None, description="Creation date")
+    tms: Optional[str] = Field(None, description="Last modification timestamp")
+
+
 class OrderResult(DolibarrBaseModel):
     """Structured order result."""
 
