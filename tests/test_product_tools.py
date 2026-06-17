@@ -194,3 +194,117 @@ def test_product_result_model_new_fields():
     assert result.status_buy == 1
     assert result.note_public == "Public"
     assert result.note_private == "Private"
+
+
+PRODUCT_API_RESPONSE = {
+    "id": 10,
+    "ref": "UPD-001",
+    "label": "Updated Product",
+    "type": "0",
+    "price": "200.00",
+    "price_ttc": "240.00",
+    "tva_tx": "20.000",
+    "stock_reel": None,
+    "cost_price": "80.00",
+    "barcode": None,
+    "barcode_type_code": None,
+    "status": 1,
+    "status_buy": 1,
+    "note_public": None,
+    "note_private": None,
+}
+
+
+def _update_defaults(**overrides):
+    """Build kwargs for update_product with all-None defaults (bypasses FieldInfo)."""
+    base = dict(
+        product_id=10,
+        label=None,
+        price=None,
+        description=None,
+        tva_tx=None,
+        cost_price=None,
+        barcode=None,
+        barcode_type_code=None,
+        status=None,
+        status_buy=None,
+        note_public=None,
+        note_private=None,
+    )
+    base.update(overrides)
+    return base
+
+
+@pytest.mark.asyncio
+async def test_update_product_sparse(mock_client, product_tools):
+    """Sparse update: only cost_price sent, other fields not in payload."""
+    mock_client.update_product.return_value = None
+    mock_client.get_product_by_id.return_value = PRODUCT_API_RESPONSE
+
+    result = await product_tools["update_product"](**_update_defaults(cost_price=80.0))
+
+    mock_client.update_product.assert_awaited_once()
+    payload = mock_client.update_product.call_args[0][1]
+    assert payload == {"cost_price": "80.0"}
+    assert "label" not in payload
+    assert isinstance(result, ProductResult)
+    assert result.id == 10
+
+
+@pytest.mark.asyncio
+async def test_update_product_multiple_fields(mock_client, product_tools):
+    """Multiple fields: all provided fields appear in payload."""
+    mock_client.update_product.return_value = None
+    mock_client.get_product_by_id.return_value = PRODUCT_API_RESPONSE
+
+    await product_tools["update_product"](**_update_defaults(
+        label="New Label",
+        price=200.0,
+        cost_price=80.0,
+        status=1,
+    ))
+
+    payload = mock_client.update_product.call_args[0][1]
+    assert payload["label"] == "New Label"
+    assert payload["price"] == "200.0"
+    assert payload["cost_price"] == "80.0"
+    assert payload["status"] == 1
+
+
+@pytest.mark.asyncio
+async def test_update_product_no_ref_in_signature(product_tools):
+    """ref is intentionally not updatable — not in the function signature."""
+    import inspect
+    sig = inspect.signature(product_tools["update_product"])
+    assert "ref" not in sig.parameters
+
+
+@pytest.mark.asyncio
+async def test_update_product_empty_raises(mock_client, product_tools):
+    """No fields provided → ValueError."""
+    with pytest.raises(ValueError, match="At least one field"):
+        await product_tools["update_product"](**_update_defaults())
+
+
+@pytest.mark.asyncio
+async def test_update_product_returns_product_result(mock_client, product_tools):
+    """update_product re-reads and returns ProductResult."""
+    mock_client.update_product.return_value = None
+    mock_client.get_product_by_id.return_value = PRODUCT_API_RESPONSE
+
+    result = await product_tools["update_product"](**_update_defaults(label="Re-read"))
+
+    mock_client.get_product_by_id.assert_awaited_once_with(10)
+    assert isinstance(result, ProductResult)
+    assert result.ref == "UPD-001"
+
+
+@pytest.mark.asyncio
+async def test_delete_product(mock_client, product_tools):
+    """delete_product calls client and returns confirmation."""
+    mock_client.delete_product.return_value = None
+
+    result = await product_tools["delete_product"](product_id=99)
+
+    mock_client.delete_product.assert_awaited_once_with(99)
+    assert result == {"status": "deleted", "product_id": 99}

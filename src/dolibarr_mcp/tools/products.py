@@ -155,3 +155,62 @@ def register_product_tools(mcp: FastMCP) -> None:
             payload["note_private"] = note_private
 
         return await client.create_product(payload)
+
+    @mcp.tool()
+    async def update_product(
+        product_id: int = Field(..., description="Product ID to update"),
+        label: Optional[str] = Field(None, description="Product label"),
+        price: Optional[float] = Field(None, description="Selling price"),
+        description: Optional[str] = Field(None, description="Product description"),
+        tva_tx: Optional[float] = Field(None, description="VAT rate"),
+        cost_price: Optional[float] = Field(None, description="Cost/purchase price"),
+        barcode: Optional[str] = Field(None, description="Barcode value"),
+        barcode_type_code: Optional[str] = Field(None, description="Barcode type code (e.g. EAN13, UPC)"),
+        status: Optional[int] = Field(None, description="Selling status (0=Not for sale, 1=For sale)"),
+        status_buy: Optional[int] = Field(None, description="Buying status (0=Not for purchase, 1=For purchase)"),
+        note_public: Optional[str] = Field(None, description="Public note"),
+        note_private: Optional[str] = Field(None, description="Private note"),
+    ) -> ProductResult:
+        """Update an existing product. Only provided fields are modified (sparse update). Returns the updated product."""
+        client = _require_client()
+
+        payload: Dict[str, Any] = {}
+        if label is not None:
+            payload["label"] = label
+        if price is not None:
+            payload["price"] = str(price)
+        if description is not None:
+            payload["description"] = description
+        if tva_tx is not None:
+            payload["tva_tx"] = str(tva_tx)
+        if cost_price is not None:
+            payload["cost_price"] = str(cost_price)
+        if barcode is not None:
+            payload["barcode"] = barcode
+        if barcode_type_code is not None:
+            payload["barcode_type_code"] = barcode_type_code
+        if status is not None:
+            payload["status"] = status
+        if status_buy is not None:
+            payload["status_buy"] = status_buy
+        if note_public is not None:
+            payload["note_public"] = note_public
+        if note_private is not None:
+            payload["note_private"] = note_private
+
+        if not payload:
+            raise ValueError("At least one field must be provided for update")
+
+        await client.update_product(product_id, payload)
+        result = await client.get_product_by_id(product_id)
+        return ProductResult(**result)
+
+    @mcp.tool()
+    async def delete_product(
+        product_id: int = Field(..., description="Product ID to delete"),
+    ) -> Dict[str, Any]:
+        """Delete a product. Returns confirmation."""
+        client = _require_client()
+
+        await client.delete_product(product_id)
+        return {"status": "deleted", "product_id": product_id}
