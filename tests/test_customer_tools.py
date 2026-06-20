@@ -43,6 +43,8 @@ def _update_defaults(**overrides):
         customer_id=1,
         name=None,
         name_alias=None,
+        client_type=None,
+        supplier=None,
         email=None,
         phone=None,
         address=None,

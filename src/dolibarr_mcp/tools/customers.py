@@ -105,6 +105,8 @@ def register_customer_tools(mcp: FastMCP) -> None:
         customer_id: int = Field(..., description="Customer ID to update"),
         name: Optional[str] = Field(None, description="Customer name"),
         name_alias: Optional[str] = Field(None, description="Alias / short name"),
+        client_type: Optional[int] = Field(None, description="Customer type (0=Neither, 1=Customer, 2=Prospect, 3=Customer+Prospect)"),
+        supplier: Optional[int] = Field(None, description="Supplier flag (0=No, 1=Yes)"),
         email: Optional[str] = Field(None, description="Email address"),
         phone: Optional[str] = Field(None, description="Phone number"),
         address: Optional[str] = Field(None, description="Address"),
@@ -124,6 +126,10 @@ def register_customer_tools(mcp: FastMCP) -> None:
             payload["name"] = name
         if name_alias:
             payload["name_alias"] = name_alias
+        if client_type is not None:
+            payload["client"] = client_type
+        if supplier is not None:
+            payload["fournisseur"] = supplier
         if email:
             payload["email"] = email
         if phone:
