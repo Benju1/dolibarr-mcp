@@ -96,7 +96,8 @@ def register_proposal_tools(mcp: FastMCP) -> None:
                 raise
         
         # Return full state
-        return await get_proposal_by_id(proposal_id)
+        full = await client.get_proposal_by_id(proposal_id)
+        return ProposalResult(**full)
 
     @mcp.tool()
     async def update_proposal(
@@ -117,9 +118,10 @@ def register_proposal_tools(mcp: FastMCP) -> None:
             raise ValueError("At least one field (date, payment_mode_id) must be provided")
         
         await client.update_proposal(proposal_id, payload)
-        
+
         # Return updated state
-        return await get_proposal_by_id(proposal_id)
+        full = await client.get_proposal_by_id(proposal_id)
+        return ProposalResult(**full)
 
     @mcp.tool()
     async def delete_proposal(
@@ -142,9 +144,10 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         client = _require_client()
         
         await client.validate_proposal(proposal_id)
-        
+
         # Return updated state
-        return await get_proposal_by_id(proposal_id)
+        full = await client.get_proposal_by_id(proposal_id)
+        return ProposalResult(**full)
 
     @mcp.tool()
     async def convert_proposal_to_order(
