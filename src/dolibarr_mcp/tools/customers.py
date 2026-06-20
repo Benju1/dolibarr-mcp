@@ -128,8 +128,12 @@ def register_customer_tools(mcp: FastMCP) -> None:
             payload["name_alias"] = name_alias
         if client_type is not None:
             payload["client"] = client_type
+            if client_type in (1, 2, 3):
+                payload.setdefault("code_client", -1)
         if supplier is not None:
             payload["fournisseur"] = supplier
+            if supplier >= 1:
+                payload.setdefault("code_fournisseur", -1)
         if email:
             payload["email"] = email
         if phone:
