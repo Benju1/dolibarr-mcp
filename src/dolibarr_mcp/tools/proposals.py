@@ -73,7 +73,7 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         }
         
         if project_id:
-            payload["fk_project"] = project_id
+            payload["fk_projet"] = project_id
         if payment_mode_id:
             payload["mode_reglement_id"] = payment_mode_id
         
@@ -193,16 +193,18 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         
         line_data = {
             "desc": description,
-            "subprice": str(unit_price),  # Send as string to avoid float rounding
+            "subprice": str(unit_price),
             "qty": str(quantity),
-            "tva_tx": str(vat_rate)
+            "tva_tx": str(vat_rate),
+            "product_type": 0
         }
-        
+
         if product_id:
             line_data["fk_product"] = product_id
-        
+
         result = await client.add_proposal_line(proposal_id, line_data)
-        # Dolibarr returns int (line_id) from postLine()
+        if result == 0 or result == "0":
+            raise ValueError(f"Dolibarr addline returned 0 — line was not created. Payload: {line_data}")
         return int(result) if isinstance(result, (int, str)) else result.get("id", result)
 
     @mcp.tool()

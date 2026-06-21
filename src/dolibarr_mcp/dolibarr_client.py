@@ -119,17 +119,17 @@ class DolibarrClient:
         
         try:
             self.logger.debug(f"Making {method} request to {url}")
-            
+
             kwargs = {
                 "params": params or {},
             }
-            
+
             if data and method.upper() in ["POST", "PUT"]:
                 kwargs["json"] = data
-            
+
             async with self.session.request(method, url, **kwargs) as response:
                 response_text = await response.text()
-                
+
                 # Log response for debugging
                 self.logger.debug(f"Response status: {response.status}")
                 self.logger.debug(f"Response text: {response_text[:500]}...")
@@ -555,7 +555,7 @@ class DolibarrClient:
         if "product_id" in payload:
             payload["fk_product"] = payload.pop("product_id")
             
-        return await self.request("POST", f"proposals/{proposal_id}/lines", data=payload)
+        return await self.request("POST", f"proposals/{proposal_id}/lines", data=[payload])
 
     async def update_proposal_line(
         self,
