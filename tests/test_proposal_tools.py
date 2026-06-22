@@ -286,3 +286,181 @@ async def test_update_proposal_line_partial_preserves_existing(mock_client, prop
             "fk_product": 55,
         }
     )
+
+
+@pytest.mark.asyncio
+async def test_add_proposal_line_with_extrafields(mock_client, proposal_tools_fns):
+    """add_proposal_line passes array_options and rang to the API."""
+    mock_client.add_proposal_line.return_value = 42
+
+    result = await proposal_tools_fns["add_proposal_line"](
+        proposal_id=10,
+        description="Fronius Smart Meter TS 100A-1",
+        unit_price=Decimal("0"),
+        quantity=Decimal("1"),
+        vat_rate=Decimal("20.0"),
+        rang=3,
+        array_options={"options_pos": "1.2"},
+    )
+
+    assert result == 42
+    mock_client.add_proposal_line.assert_awaited_once_with(
+        10, {
+            "desc": "Fronius Smart Meter TS 100A-1",
+            "subprice": "0",
+            "qty": "1",
+            "tva_tx": "20.0",
+            "product_type": 0,
+            "rang": 3,
+            "array_options": {"options_pos": "1.2"},
+        }
+    )
+
+
+@pytest.mark.asyncio
+async def test_add_proposal_line_without_extrafields(mock_client, proposal_tools_fns):
+    """add_proposal_line omits array_options and rang when not provided."""
+    mock_client.add_proposal_line.return_value = 43
+
+    result = await proposal_tools_fns["add_proposal_line"](
+        proposal_id=10,
+        description="PV-Generator",
+        unit_price=Decimal("5200"),
+        quantity=Decimal("1"),
+    )
+
+    assert result == 43
+    call_payload = mock_client.add_proposal_line.call_args[0][1]
+    assert "array_options" not in call_payload
+    assert "rang" not in call_payload
+
+
+@pytest.mark.asyncio
+async def test_update_proposal_line_with_extrafields(mock_client, proposal_tools_fns):
+    """update_proposal_line sets array_options on a line that had none."""
+    mock_client.get_proposal_by_id.return_value = {
+        "lines": [
+            {"id": 7, "desc": "Zählerverteiler", "subprice": "3300.0", "qty": "1", "tva_tx": "20.0", "product_type": 0}
+        ]
+    }
+    mock_client.update_proposal_line.return_value = None
+
+    result = await proposal_tools_fns["update_proposal_line"](
+        proposal_id=10, line_id=7,
+        description=None, unit_price=None, quantity=None, vat_rate=None,
+        array_options={"options_pos": "3"},
+    )
+
+    assert result == 7
+    call_payload = mock_client.update_proposal_line.call_args[0][2]
+    assert call_payload["array_options"] == {"options_pos": "3"}
+
+
+@pytest.mark.asyncio
+async def test_update_proposal_line_merges_extrafields(mock_client, proposal_tools_fns):
+    """update_proposal_line merges new array_options with existing ones."""
+    mock_client.get_proposal_by_id.return_value = {
+        "lines": [
+            {
+                "id": 7, "desc": "Zählerverteiler", "subprice": "3300.0",
+                "qty": "1", "tva_tx": "20.0", "product_type": 0,
+                "array_options": {"options_pos": "3", "options_other": "keep"},
+            }
+        ]
+    }
+    mock_client.update_proposal_line.return_value = None
+
+    result = await proposal_tools_fns["update_proposal_line"](
+        proposal_id=10, line_id=7,
+        description=None, unit_price=None, quantity=None, vat_rate=None,
+        array_options={"options_pos": "3.1"},
+    )
+
+    assert result == 7
+    call_payload = mock_client.update_proposal_line.call_args[0][2]
+    assert call_payload["array_options"] == {"options_pos": "3.1", "options_other": "keep"}
+
+
+@pytest.mark.asyncio
+async def test_update_proposal_line_with_rang(mock_client, proposal_tools_fns):
+    """update_proposal_line can set rang for line reordering."""
+    mock_client.get_proposal_by_id.return_value = {
+        "lines": [
+            {"id": 7, "desc": "Line", "subprice": "100.0", "qty": "1", "tva_tx": "20.0", "product_type": 0}
+        ]
+    }
+    mock_client.update_proposal_line.return_value = None
+
+    result = await proposal_tools_fns["update_proposal_line"](
+        proposal_id=10, line_id=7,
+        description=None, unit_price=None, quantity=None, vat_rate=None,
+        rang=5,
+    )
+
+    assert result == 7
+    call_payload = mock_client.update_proposal_line.call_args[0][2]
+    assert call_payload["rang"] == 5
+
+
+@pytest.mark.asyncio
+async def test_proposal_line_model_with_extrafields():
+    """ProposalLine model parses rang and array_options from API response."""
+    line = ProposalLine(
+        id=1,
+        desc="Fronius Smart Meter",
+        subprice=Decimal("0"),
+        qty=Decimal("1"),
+        tva_tx=Decimal("20.0"),
+        total_ht=Decimal("0"),
+        total_ttc=Decimal("0"),
+        rang=3,
+        array_options={"options_pos": "1.2"},
+    )
+    assert line.rang == 3
+    assert line.array_options == {"options_pos": "1.2"}
+
+
+@pytest.mark.asyncio
+async def test_proposal_line_model_without_extrafields():
+    """ProposalLine model works without rang and array_options."""
+    line = ProposalLine(
+        id=1,
+        desc="PV-Generator",
+        subprice=Decimal("5200"),
+        qty=Decimal("1"),
+        tva_tx=Decimal("20.0"),
+        total_ht=Decimal("5200"),
+        total_ttc=Decimal("6240"),
+    )
+    assert line.rang is None
+    assert line.array_options is None
+
+
+@pytest.mark.asyncio
+async def test_invoice_line_model_with_extrafields():
+    """InvoiceLine model (used for create_proposal lines) supports extrafields."""
+    line = InvoiceLine(
+        desc="Montagesystem K2 Flachdach",
+        subprice=Decimal("0"),
+        qty=Decimal("1"),
+        tva_tx=Decimal("20.0"),
+        rang=2,
+        array_options={"options_pos": "1.2"},
+    )
+    data = line.model_dump(exclude_none=True)
+    assert data["rang"] == 2
+    assert data["array_options"] == {"options_pos": "1.2"}
+
+
+@pytest.mark.asyncio
+async def test_invoice_line_model_omits_extrafields_when_none():
+    """InvoiceLine model_dump excludes rang/array_options when not set."""
+    line = InvoiceLine(
+        desc="PV-Generator",
+        subprice=Decimal("5200"),
+        qty=Decimal("1"),
+        tva_tx=Decimal("20.0"),
+    )
+    data = line.model_dump(exclude_none=True)
+    assert "rang" not in data
+    assert "array_options" not in data

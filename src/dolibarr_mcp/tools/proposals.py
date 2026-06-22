@@ -182,15 +182,19 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         unit_price: Decimal = Field(..., description="Unit price (net)"),
         quantity: Decimal = Field(..., description="Quantity"),
         vat_rate: Decimal = Field(20.0, description="VAT rate (%)"),
-        product_id: Optional[int] = Field(None, description="Product ID (optional)")
+        product_id: Optional[int] = Field(None, description="Product ID (optional)"),
+        rang: Optional[int] = Field(None, description="Line position/ordering"),
+        array_options: Optional[dict] = Field(None, description="Extrafields dict, e.g. {'options_pos': '1.1'}")
     ) -> int:
         """Add a line to a proposal.
-        
+
+        Use array_options to set extrafields like position numbers:
+        array_options={'options_pos': '1.1'} for sub-position numbering.
+
         Returns the created line ID.
-        Note: Dolibarr API returns only the line ID, not full line details.
         """
         client = _require_client()
-        
+
         line_data = {
             "desc": description,
             "subprice": str(unit_price),
@@ -199,8 +203,12 @@ def register_proposal_tools(mcp: FastMCP) -> None:
             "product_type": 0
         }
 
-        if product_id:
+        if isinstance(product_id, int):
             line_data["fk_product"] = product_id
+        if isinstance(rang, int):
+            line_data["rang"] = rang
+        if isinstance(array_options, dict):
+            line_data["array_options"] = array_options
 
         result = await client.add_proposal_line(proposal_id, line_data)
         if result == 0 or result == "0":
@@ -214,16 +222,27 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         description: Optional[str] = Field(None, description="Line description"),
         unit_price: Optional[Decimal] = Field(None, description="Unit price (net)"),
         quantity: Optional[Decimal] = Field(None, description="Quantity"),
-        vat_rate: Optional[Decimal] = Field(None, description="VAT rate (%)")
+        vat_rate: Optional[Decimal] = Field(None, description="VAT rate (%)"),
+        rang: Optional[int] = Field(None, description="Line position/ordering"),
+        array_options: Optional[dict] = Field(None, description="Extrafields dict, e.g. {'options_pos': '1.1'}")
     ) -> int:
         """Update a line in a proposal.
 
         Provide only the fields you want to update.
+        Use array_options to set extrafields like position numbers.
         Returns the updated line ID.
         """
         client = _require_client()
 
-        if all(v is None for v in (description, unit_price, quantity, vat_rate)):
+        has_update = (
+            description is not None
+            or unit_price is not None
+            or quantity is not None
+            or vat_rate is not None
+            or isinstance(rang, int)
+            or isinstance(array_options, dict)
+        )
+        if not has_update:
             raise ValueError("At least one field must be provided for update")
 
         # Fetch current line data to preserve unprovided fields
@@ -246,6 +265,8 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         }
         if current_line.get("fk_product"):
             payload["fk_product"] = current_line["fk_product"]
+        if current_line.get("array_options"):
+            payload["array_options"] = current_line["array_options"]
 
         if description is not None:
             payload["desc"] = description
@@ -255,6 +276,11 @@ def register_proposal_tools(mcp: FastMCP) -> None:
             payload["qty"] = str(quantity)
         if vat_rate is not None:
             payload["tva_tx"] = str(vat_rate)
+        if isinstance(rang, int):
+            payload["rang"] = rang
+        if isinstance(array_options, dict):
+            existing = payload.get("array_options") or {}
+            payload["array_options"] = {**existing, **array_options}
 
         result = await client.update_proposal_line(proposal_id, line_id, payload)
         return line_id

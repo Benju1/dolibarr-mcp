@@ -129,6 +129,10 @@ class InvoiceLine(DolibarrBaseModel):
     tva_tx: ScientificDecimal = Field(..., description="VAT rate (e.g. 20.0)")
     product_id: Optional[int] = Field(None, description="Product ID (optional)")
     product_type: int = Field(0, description="Type (0=Product, 1=Service)")
+    rang: Optional[int] = Field(None, description="Line position/ordering")
+    array_options: Optional[Dict[str, Any]] = Field(
+        None, description="Extrafields (e.g. {'options_pos': '1.1'})"
+    )
 
 
 class InvoiceLineResult(DolibarrBaseModel):
@@ -233,6 +237,10 @@ class ProposalLine(DolibarrBaseModel):
     total_ttc: ScientificDecimal = Field(..., description="Total gross amount")
     product_id: Optional[int] = Field(
         None, alias="fk_product", description="Product ID"
+    )
+    rang: Optional[int] = Field(None, description="Line position/ordering")
+    array_options: Optional[Dict[str, Any]] = Field(
+        None, description="Extrafields (e.g. {'options_pos': '1.1'})"
     )
 
 
