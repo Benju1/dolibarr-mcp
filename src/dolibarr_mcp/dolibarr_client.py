@@ -577,6 +577,11 @@ class DolibarrClient:
         payload = {}
         return await self.request("POST", f"proposals/{proposal_id}/validate", data=payload)
 
+    async def close_proposal(self, proposal_id: int, status: int, note: str = "") -> Dict[str, Any]:
+        """Close a proposal by setting its status (2=signed, 3=declined)."""
+        payload = {"note_private": note} if note else {}
+        return await self.request("POST", f"proposals/{proposal_id}/close/{status}", data=payload)
+
     async def convert_proposal_to_order(self, proposal_id: int) -> Dict[str, Any]:
         """Convert a proposal to an order."""
         payload = {}

@@ -153,6 +153,24 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         return ProposalResult(**full)
 
     @mcp.tool()
+    async def sign_proposal(
+        proposal_id: int = Field(..., description="Proposal ID to sign"),
+        note: str = Field("", description="Optional private note for the signature")
+    ) -> ProposalResult:
+        """Sign a validated proposal (transition from open to signed/accepted).
+
+        Sets the proposal status to 'signed' (Beauftragt).
+        The proposal must be in 'open' (validated) status.
+        Returns the updated proposal details.
+        """
+        client = _require_client()
+
+        await client.close_proposal(proposal_id, status=2, note=note)
+
+        full = await client.get_proposal_by_id(proposal_id)
+        return ProposalResult(**full)
+
+    @mcp.tool()
     async def convert_proposal_to_order(
         proposal_id: int = Field(..., description="Proposal ID to convert")
     ) -> int:
