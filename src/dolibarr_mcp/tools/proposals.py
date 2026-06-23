@@ -103,19 +103,22 @@ def register_proposal_tools(mcp: FastMCP) -> None:
     async def update_proposal(
         proposal_id: int = Field(..., description="Proposal ID"),
         date: Optional[str] = Field(None, description="Proposal date (YYYY-MM-DD)"),
-        payment_mode_id: Optional[int] = Field(None, description="Payment mode ID")
+        payment_mode_id: Optional[int] = Field(None, description="Payment mode ID"),
+        project_id: Optional[int] = Field(None, description="Project ID")
     ) -> ProposalResult:
         """Update an existing proposal (draft only). Returns updated proposal."""
         client = _require_client()
-        
+
         payload = {}
-        if date:
+        if date is not None:
             payload["date"] = date
-        if payment_mode_id:
+        if payment_mode_id is not None:
             payload["mode_reglement_id"] = payment_mode_id
-        
+        if project_id is not None:
+            payload["fk_projet"] = project_id
+
         if not payload:
-            raise ValueError("At least one field (date, payment_mode_id) must be provided")
+            raise ValueError("At least one field (date, payment_mode_id, project_id) must be provided")
         
         await client.update_proposal(proposal_id, payload)
 

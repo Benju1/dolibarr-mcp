@@ -119,10 +119,9 @@ async def test_create_proposal_returns_full_state():
 
 
 @pytest.mark.asyncio
-async def test_update_proposal_returns_full_state():
-    """Test that update_proposal returns ProposalResult, not just ID."""
-    mock_client = AsyncMock()
-    mock_client.update_proposal.return_value = None  # Update returns nothing
+async def test_update_proposal_with_project_id(mock_client, proposal_tools_fns):
+    """Test that update_proposal passes project_id as fk_projet."""
+    mock_client.update_proposal.return_value = None
     mock_client.get_proposal_by_id.return_value = {
         "id": 123,
         "ref": "PROP-2025-001",
@@ -134,10 +133,15 @@ async def test_update_proposal_returns_full_state():
         "status": 0,
         "project_id": 5
     }
-    
-    state_module.set_client(mock_client)
-    assert state_module.get_client() is mock_client
-    state_module.set_client(None)
+
+    result = await proposal_tools_fns["update_proposal"](
+        proposal_id=123, date=None, payment_mode_id=None, project_id=5
+    )
+
+    mock_client.update_proposal.assert_awaited_once_with(123, {"fk_projet": 5})
+    assert isinstance(result, ProposalResult)
+    assert result.id == 123
+    assert result.project_id == 5
 
 
 @pytest.mark.asyncio
