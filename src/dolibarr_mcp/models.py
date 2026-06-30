@@ -221,6 +221,7 @@ class ContactResult(DolibarrBaseModel):
     socid: int = Field(..., description="Associated thirdparty ID")
     poste: Optional[str] = Field(None, description="Job position")
     phone_pro: Optional[str] = Field(None, description="Professional phone")
+    phone_mobile: Optional[str] = Field(None, description="Mobile phone")
 
 
 class ProposalLine(DolibarrBaseModel):

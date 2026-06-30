@@ -34,17 +34,27 @@ def register_contact_tools(mcp: FastMCP) -> None:
         return [ContactResult(**item) for item in result]
 
     @mcp.tool()
+    async def get_contact_by_id(
+        contact_id: int = Field(..., description="Contact ID"),
+    ) -> ContactResult:
+        """Get details of a specific contact."""
+        client = _require_client()
+        result = await client.get_contact_by_id(contact_id)
+        return ContactResult(**result)
+
+    @mcp.tool()
     async def create_contact(
         lastname: str = Field(..., description="Last name"),
         firstname: str = Field(..., description="First name"),
         socid: int = Field(..., description="Associated customer ID"),
         email: Optional[str] = Field(None, description="Email address"),
         phone_pro: Optional[str] = Field(None, description="Professional phone"),
+        phone_mobile: Optional[str] = Field(None, description="Mobile phone"),
         poste: Optional[str] = Field(None, description="Job position")
     ) -> int:
         """Create a new contact."""
         client = _require_client()
-            
+
         payload = {
             "lastname": lastname,
             "firstname": firstname,
@@ -54,10 +64,48 @@ def register_contact_tools(mcp: FastMCP) -> None:
             payload["email"] = email
         if phone_pro:
             payload["phone_pro"] = phone_pro
+        if phone_mobile:
+            payload["phone_mobile"] = phone_mobile
         if poste:
             payload["poste"] = poste
-                
+
         return await client.create_contact(payload)
+
+    @mcp.tool()
+    async def update_contact(
+        contact_id: int = Field(..., description="Contact ID to update"),
+        lastname: Optional[str] = Field(None, description="Last name"),
+        firstname: Optional[str] = Field(None, description="First name"),
+        email: Optional[str] = Field(None, description="Email address"),
+        phone_pro: Optional[str] = Field(None, description="Professional phone"),
+        phone_mobile: Optional[str] = Field(None, description="Mobile phone"),
+        poste: Optional[str] = Field(None, description="Job position"),
+        socid: Optional[int] = Field(None, description="Associated customer ID"),
+    ) -> ContactResult:
+        """Update an existing contact. Only provided fields are changed."""
+        client = _require_client()
+
+        payload = {}
+        if lastname is not None:
+            payload["lastname"] = lastname
+        if firstname is not None:
+            payload["firstname"] = firstname
+        if email is not None:
+            payload["email"] = email
+        if phone_pro is not None:
+            payload["phone_pro"] = phone_pro
+        if phone_mobile is not None:
+            payload["phone_mobile"] = phone_mobile
+        if poste is not None:
+            payload["poste"] = poste
+        if socid is not None:
+            payload["socid"] = socid
+
+        if payload:
+            await client.update_contact(contact_id, payload)
+
+        result = await client.get_contact_by_id(contact_id)
+        return ContactResult(**result)
 
     @mcp.tool()
     async def delete_contact(
