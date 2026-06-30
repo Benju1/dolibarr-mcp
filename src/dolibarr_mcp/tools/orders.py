@@ -1,6 +1,6 @@
 """Order tools for Dolibarr MCP Server."""
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 from pydantic import Field
@@ -122,3 +122,12 @@ def register_order_tools(mcp: FastMCP) -> None:
         if isinstance(result, dict):
             return int(result.get("id", 0))
         return 0
+
+    @mcp.tool()
+    async def delete_order(
+        order_id: int = Field(..., description="Order ID to delete"),
+    ) -> Dict[str, Any]:
+        """Delete an order. Returns confirmation."""
+        client = _require_client()
+        await client.delete_order(order_id)
+        return {"status": "deleted", "order_id": order_id}

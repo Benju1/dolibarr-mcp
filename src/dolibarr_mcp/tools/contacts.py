@@ -1,6 +1,6 @@
 """Contact tools for Dolibarr MCP Server."""
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 from pydantic import Field
@@ -58,3 +58,12 @@ def register_contact_tools(mcp: FastMCP) -> None:
             payload["poste"] = poste
                 
         return await client.create_contact(payload)
+
+    @mcp.tool()
+    async def delete_contact(
+        contact_id: int = Field(..., description="Contact ID to delete"),
+    ) -> Dict[str, Any]:
+        """Delete a contact. Returns confirmation."""
+        client = _require_client()
+        await client.delete_contact(contact_id)
+        return {"status": "deleted", "contact_id": contact_id}

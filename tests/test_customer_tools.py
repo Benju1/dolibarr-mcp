@@ -133,3 +133,14 @@ async def test_update_customer_zip_maps_to_zip_key(mock_client, customer_tools):
     payload = mock_client.update_customer.call_args[0][1]
     assert payload["zip"] == "6800"
     assert "zip_code" not in payload
+
+
+@pytest.mark.asyncio
+async def test_delete_customer(mock_client, customer_tools):
+    """delete_customer calls client and returns confirmation."""
+    mock_client.delete_customer.return_value = None
+
+    result = await customer_tools["delete_customer"](customer_id=150)
+
+    mock_client.delete_customer.assert_awaited_once_with(150)
+    assert result == {"status": "deleted", "customer_id": 150}

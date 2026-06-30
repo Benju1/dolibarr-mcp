@@ -1,7 +1,7 @@
 """Customer tools for Dolibarr MCP Server."""
 
 import re
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 from pydantic import Field
@@ -159,3 +159,12 @@ def register_customer_tools(mcp: FastMCP) -> None:
             return customer_id
 
         return await client.update_customer(customer_id, payload)
+
+    @mcp.tool()
+    async def delete_customer(
+        customer_id: int = Field(..., description="Customer ID to delete"),
+    ) -> Dict[str, Any]:
+        """Delete a customer/third party. Returns confirmation."""
+        client = _require_client()
+        await client.delete_customer(customer_id)
+        return {"status": "deleted", "customer_id": customer_id}

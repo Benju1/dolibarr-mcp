@@ -1,7 +1,7 @@
 """Project tools for Dolibarr MCP Server."""
 
 import re
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 from pydantic import Field
@@ -197,6 +197,15 @@ def register_project_tools(mcp: FastMCP) -> None:
         client = _require_client()
         result = await client.get_project_contacts(project_id)
         return [ProjectContactResult(**item) for item in result]
+
+    @mcp.tool()
+    async def delete_project(
+        project_id: int = Field(..., description="Project ID to delete"),
+    ) -> Dict[str, Any]:
+        """Delete a project. Returns confirmation."""
+        client = _require_client()
+        await client.delete_project(project_id)
+        return {"status": "deleted", "project_id": project_id}
 
     @mcp.tool()
     async def remove_project_contact(

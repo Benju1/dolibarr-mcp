@@ -343,3 +343,39 @@ class TestUpdateProjectTool:
         mock_client.update_project.assert_awaited_once_with(306, {
             "status": 0, "opp_amount": 0.0,
         })
+
+
+class TestDeleteProjectTool:
+    """Tests for the delete_project MCP tool."""
+
+    @pytest.fixture
+    def mock_client(self):
+        client = AsyncMock()
+        state_module.set_client(client)
+        yield client
+        state_module.set_client(None)
+
+    @pytest.fixture
+    def project_tools(self):
+        mcp = AsyncMock()
+        registered = {}
+
+        def tool_decorator():
+            def wrapper(fn):
+                registered[fn.__name__] = fn
+                return fn
+            return wrapper
+
+        mcp.tool = tool_decorator
+        register_project_tools(mcp)
+        return registered
+
+    @pytest.mark.asyncio
+    async def test_delete_project(self, mock_client, project_tools):
+        """delete_project calls client and returns confirmation."""
+        mock_client.delete_project.return_value = None
+
+        result = await project_tools["delete_project"](project_id=200)
+
+        mock_client.delete_project.assert_awaited_once_with(200)
+        assert result == {"status": "deleted", "project_id": 200}
