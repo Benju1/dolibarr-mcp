@@ -750,27 +750,27 @@ class DolibarrClient:
     async def add_project_contact(
         self, project_id: int, data: Optional[Dict[str, Any]] = None, **kwargs,
     ) -> Dict[str, Any]:
-        """Add a contact to a project. Requires Dolibarr 21.0+."""
+        """Add a contact to a project. Requires Dolibarr 23.0+."""
         payload = self._merge_payload(data, **kwargs)
         try:
             return await self.request("POST", f"projects/{project_id}/contacts", data=payload)
         except DolibarrAPIError as e:
             if e.status_code == 404:
                 raise DolibarrAPIError(
-                    "Project contacts API not available. Requires Dolibarr 21.0+.",
+                    "Project contacts API not available. Requires Dolibarr 23.0+ (added in PR #35459).",
                     status_code=404, response_data=e.response_data,
                 ) from e
             raise
 
     async def get_project_contacts(self, project_id: int) -> List[Dict[str, Any]]:
-        """Get contacts assigned to a project. Requires Dolibarr 21.0+."""
+        """Get contacts assigned to a project. Requires Dolibarr 23.0+."""
         try:
             result = await self.request("GET", f"projects/{project_id}/contacts")
             return result if isinstance(result, list) else []
         except DolibarrAPIError as e:
             if e.status_code == 404:
                 raise DolibarrAPIError(
-                    "Project contacts API not available. Requires Dolibarr 21.0+.",
+                    "Project contacts API not available. Requires Dolibarr 23.0+ (added in PR #35459).",
                     status_code=404, response_data=e.response_data,
                 ) from e
             raise
@@ -778,13 +778,13 @@ class DolibarrClient:
     async def remove_project_contact(
         self, project_id: int, contact_id: int, type_contact: str,
     ) -> Dict[str, Any]:
-        """Remove a contact from a project. Requires Dolibarr 21.0+."""
+        """Remove a contact from a project. Requires Dolibarr 23.0+."""
         try:
             return await self.request("DELETE", f"projects/{project_id}/contact/{contact_id}/{type_contact}")
         except DolibarrAPIError as e:
             if e.status_code == 404:
                 raise DolibarrAPIError(
-                    "Project contacts API not available. Requires Dolibarr 21.0+.",
+                    "Project contacts API not available. Requires Dolibarr 23.0+ (added in PR #35459).",
                     status_code=404, response_data=e.response_data,
                 ) from e
             raise

@@ -163,7 +163,7 @@ class TestProjectOperations:
     async def test_add_project_contact_404_version_error(self, client):
         """404 from add_project_contact re-raises with Dolibarr version hint."""
         with patch.object(client, 'request', side_effect=DolibarrAPIError("Not Found", status_code=404)):
-            with pytest.raises(DolibarrAPIError, match="Requires Dolibarr 21.0"):
+            with pytest.raises(DolibarrAPIError, match="Requires Dolibarr 23.0"):
                 await client.add_project_contact(200, {
                     "fk_socpeople": 151,
                     "type_contact": "PROJECTCONTRIBUTOR",
@@ -174,14 +174,14 @@ class TestProjectOperations:
     async def test_get_project_contacts_404_version_error(self, client):
         """404 from get_project_contacts re-raises with Dolibarr version hint."""
         with patch.object(client, 'request', side_effect=DolibarrAPIError("Not Found", status_code=404)):
-            with pytest.raises(DolibarrAPIError, match="Requires Dolibarr 21.0"):
+            with pytest.raises(DolibarrAPIError, match="Requires Dolibarr 23.0"):
                 await client.get_project_contacts(200)
 
     @pytest.mark.asyncio
     async def test_remove_project_contact_404_version_error(self, client):
         """404 from remove_project_contact re-raises with Dolibarr version hint."""
         with patch.object(client, 'request', side_effect=DolibarrAPIError("Not Found", status_code=404)):
-            with pytest.raises(DolibarrAPIError, match="Requires Dolibarr 21.0"):
+            with pytest.raises(DolibarrAPIError, match="Requires Dolibarr 23.0"):
                 await client.remove_project_contact(200, 151, "PROJECTCONTRIBUTOR")
 
 
