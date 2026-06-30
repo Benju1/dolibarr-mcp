@@ -41,12 +41,35 @@ def register_customer_tools(mcp: FastMCP) -> None:
         query: str = Field(..., description="Search term for name or alias"),
         limit: int = Field(20, ge=1, le=100, description="Maximum number of results")
     ) -> List[CustomerResult]:
-        """Search customers by name or alias."""
+        """Search customers by name or alias (filters to client >= 1)."""
         client = _require_client()
-            
+
         query_sanitized = _sanitize_search(query)
-        sqlfilters = f"((t.nom:like:'%{query_sanitized}%') or (t.name_alias:like:'%{query_sanitized}%'))"
-        
+        sqlfilters = (
+            f"((t.nom:like:'%{query_sanitized}%') or (t.name_alias:like:'%{query_sanitized}%'))"
+            f" and (t.client:>=:1)"
+        )
+
+        try:
+            result = await client.search_customers(sqlfilters=sqlfilters, limit=limit)
+            return [CustomerResult(**item) for item in result]
+        except DolibarrAPIError as e:
+            raise RuntimeError(f"Dolibarr API Error: {e.message}")
+
+    @mcp.tool()
+    async def search_suppliers(
+        query: str = Field(..., description="Search term for name or alias"),
+        limit: int = Field(20, ge=1, le=100, description="Maximum number of results")
+    ) -> List[CustomerResult]:
+        """Search suppliers by name or alias (filters to fournisseur >= 1)."""
+        client = _require_client()
+
+        query_sanitized = _sanitize_search(query)
+        sqlfilters = (
+            f"((t.nom:like:'%{query_sanitized}%') or (t.name_alias:like:'%{query_sanitized}%'))"
+            f" and (t.fournisseur:>=:1)"
+        )
+
         try:
             result = await client.search_customers(sqlfilters=sqlfilters, limit=limit)
             return [CustomerResult(**item) for item in result]
@@ -66,7 +89,8 @@ def register_customer_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def create_customer(
         name: str = Field(..., description="Customer/supplier name"),
-        thirdparty_type: int = Field(1, description="Type (1=Customer, 2=Supplier, 3=Both, 0=Neither/Prospect)"),
+        client_type: int = Field(1, description="Customer type (0=Neither, 1=Customer, 2=Prospect, 3=Customer+Prospect)"),
+        supplier: int = Field(0, description="Supplier flag (0=No, 1=Yes)"),
         email: Optional[str] = Field(None, description="Email address"),
         phone: Optional[str] = Field(None, description="Phone number"),
         address: Optional[str] = Field(None, description="Address"),
@@ -75,16 +99,23 @@ def register_customer_tools(mcp: FastMCP) -> None:
         country_id: int = Field(1, description="Country ID (default: 1)"),
         idprof1: Optional[str] = Field(None, description="Professional ID 1 (e.g. UID/SIREN)")
     ) -> int:
-        """Create a new customer/supplier/third party."""
+        """Create a new customer/supplier/third party.
+
+        Use client_type to set the customer role and supplier to mark as supplier.
+        Both can be combined (e.g. client_type=1, supplier=1 for Customer+Supplier).
+        """
         client = _require_client()
 
         payload = {
             "name": name,
-            "type": thirdparty_type,
-            "code_client": -1,  # Auto-generate code
-            "code_fournisseur": -1,  # Auto-generate supplier code
-            "country_id": country_id
+            "client": client_type,
+            "fournisseur": supplier,
+            "country_id": country_id,
         }
+        if client_type in (1, 2, 3):
+            payload["code_client"] = -1
+        if supplier >= 1:
+            payload["code_fournisseur"] = -1
         if email:
             payload["email"] = email
         if phone:
