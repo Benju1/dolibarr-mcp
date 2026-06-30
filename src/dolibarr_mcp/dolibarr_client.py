@@ -643,7 +643,21 @@ class DolibarrClient:
             
         return await self.request("POST", f"orders/{order_id}/lines", data=payload)
 
-    
+    async def update_order_line(
+        self,
+        order_id: int,
+        line_id: int,
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Update a line in an order."""
+        payload = self._merge_payload(data, **kwargs)
+        return await self.request("PUT", f"orders/{order_id}/lines/{line_id}", data=payload)
+
+    async def delete_order_line(self, order_id: int, line_id: int) -> Dict[str, Any]:
+        """Delete a line from an order."""
+        return await self.request("DELETE", f"orders/{order_id}/lines/{line_id}")
+
     # ============================================================================
     # CONTACT MANAGEMENT
     # ============================================================================

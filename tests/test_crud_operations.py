@@ -240,7 +240,30 @@ class TestCRUDOperations:
             mock_request.return_value = {"success": True}
             result = await client.delete_order(50)
             assert result["success"] is True
-    
+
+    @pytest.mark.asyncio
+    async def test_order_line_update_and_delete(self, client):
+        """Test update and delete for order lines."""
+        with patch.object(client, 'request') as mock_request:
+            # Update line
+            mock_request.return_value = {"id": 101}
+            result = await client.update_order_line(50, 101, {
+                "desc": "Updated line",
+                "subprice": "200.00",
+                "qty": "3",
+                "tva_tx": "20",
+            })
+            mock_request.assert_called_with(
+                "PUT", "orders/50/lines/101",
+                data={"desc": "Updated line", "subprice": "200.00", "qty": "3", "tva_tx": "20"},
+            )
+
+            # Delete line
+            mock_request.return_value = {"success": True}
+            result = await client.delete_order_line(50, 101)
+            mock_request.assert_called_with("DELETE", "orders/50/lines/101")
+            assert result["success"] is True
+
     # Contact CRUD Tests
     
     @pytest.mark.asyncio

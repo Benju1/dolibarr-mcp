@@ -1,5 +1,6 @@
 """Order tools for Dolibarr MCP Server."""
 
+from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
@@ -122,6 +123,101 @@ def register_order_tools(mcp: FastMCP) -> None:
         if isinstance(result, dict):
             return int(result.get("id", 0))
         return 0
+
+    @mcp.tool()
+    async def update_order(
+        order_id: int = Field(..., description="Order ID to update"),
+        date: Optional[str] = Field(None, description="Order date (YYYY-MM-DD)"),
+        delivery_date: Optional[str] = Field(None, description="Delivery date (YYYY-MM-DD)"),
+        project_id: Optional[int] = Field(None, description="Project ID"),
+        payment_mode_id: Optional[int] = Field(None, description="Payment mode ID"),
+    ) -> OrderResult:
+        """Update an existing order. Only provided fields are changed."""
+        client = _require_client()
+
+        payload = {}
+        if date is not None:
+            payload["date_commande"] = date
+        if delivery_date is not None:
+            payload["date_livraison"] = delivery_date
+        if project_id is not None:
+            payload["fk_project"] = project_id
+        if payment_mode_id is not None:
+            payload["mode_reglement_id"] = payment_mode_id
+
+        if not payload:
+            raise ValueError("At least one field must be provided for update")
+
+        await client.update_order(order_id, payload)
+
+        result = await client.get_order_by_id(order_id)
+        return OrderResult(**result)
+
+    @mcp.tool()
+    async def update_order_line(
+        order_id: int = Field(..., description="Order ID"),
+        line_id: int = Field(..., description="Line ID"),
+        description: Optional[str] = Field(None, description="Line description"),
+        unit_price: Optional[Decimal] = Field(None, description="Unit price (net)"),
+        quantity: Optional[Decimal] = Field(None, description="Quantity"),
+        vat_rate: Optional[Decimal] = Field(None, description="VAT rate (%)"),
+    ) -> int:
+        """Update a line in an order. Returns the updated line ID.
+
+        Provide only the fields you want to update.
+        Unprovided fields are preserved from the current line data.
+        """
+        client = _require_client()
+
+        has_update = (
+            description is not None
+            or unit_price is not None
+            or quantity is not None
+            or vat_rate is not None
+        )
+        if not has_update:
+            raise ValueError("At least one field must be provided for update")
+
+        order_data = await client.get_order_by_id(order_id)
+        current_line = None
+        for line in order_data.get("lines", []):
+            if int(line.get("id", 0)) == line_id:
+                current_line = line
+                break
+        if current_line is None:
+            raise ValueError(f"Line {line_id} not found in order {order_id}")
+
+        payload = {
+            "desc": current_line.get("desc", ""),
+            "subprice": str(current_line.get("subprice", 0)),
+            "qty": str(current_line.get("qty", 0)),
+            "tva_tx": str(current_line.get("tva_tx", 0)),
+            "product_type": current_line.get("product_type", 0),
+        }
+        if current_line.get("fk_product"):
+            payload["fk_product"] = current_line["fk_product"]
+
+        if description is not None:
+            payload["desc"] = description
+        if unit_price is not None:
+            payload["subprice"] = str(unit_price)
+        if quantity is not None:
+            payload["qty"] = str(quantity)
+        if vat_rate is not None:
+            payload["tva_tx"] = str(vat_rate)
+
+        await client.update_order_line(order_id, line_id, payload)
+        return line_id
+
+    @mcp.tool()
+    async def delete_order_line(
+        order_id: int = Field(..., description="Order ID"),
+        line_id: int = Field(..., description="Line ID to delete"),
+    ) -> int:
+        """Delete a line from an order. Returns the deleted line ID."""
+        client = _require_client()
+        await client.delete_order_line(order_id, line_id)
+        return line_id
 
     @mcp.tool()
     async def delete_order(
