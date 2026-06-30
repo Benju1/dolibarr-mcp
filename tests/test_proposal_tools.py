@@ -93,9 +93,8 @@ async def test_proposal_line_with_product():
 
 
 @pytest.mark.asyncio
-async def test_create_proposal_returns_full_state():
-    """Test that create_proposal returns ProposalResult, not just ID."""
-    mock_client = AsyncMock()
+async def test_create_proposal_returns_full_state(mock_client, proposal_tools_fns):
+    """create_proposal returns ProposalResult after creating via client."""
     mock_client.create_proposal.return_value = 123
     mock_client.get_proposal_by_id.return_value = {
         "id": 123,
@@ -108,14 +107,17 @@ async def test_create_proposal_returns_full_state():
         "status": 0,
         "project_id": 5
     }
-    
-    state_module.set_client(mock_client)
-    
-    # This test validates that the tool structure is correct
-    # The actual tool function is registered via FastMCP decorator
-    assert state_module.get_client() is mock_client
-    
-    state_module.set_client(None)
+
+    result = await proposal_tools_fns["create_proposal"](
+        customer_id=10, date="2024-12-20",
+        lines=None, project_id=None, payment_mode_id=None,
+    )
+
+    assert isinstance(result, ProposalResult)
+    assert result.id == 123
+    assert result.ref == "PROP-2025-001"
+    mock_client.create_proposal.assert_awaited_once()
+    mock_client.get_proposal_by_id.assert_awaited_once_with(123)
 
 
 @pytest.mark.asyncio
@@ -227,9 +229,8 @@ async def test_get_proposals_with_customer_filter():
 
 
 @pytest.mark.asyncio
-async def test_validate_proposal_returns_updated_state():
-    """Test that validate_proposal returns updated ProposalResult."""
-    mock_client = AsyncMock()
+async def test_validate_proposal_returns_updated_state(mock_client, proposal_tools_fns):
+    """validate_proposal calls client and returns updated ProposalResult."""
     mock_client.validate_proposal.return_value = None
     mock_client.get_proposal_by_id.return_value = {
         "id": 123,
@@ -239,14 +240,16 @@ async def test_validate_proposal_returns_updated_state():
         "total_ht": Decimal("1000.00"),
         "total_tva": Decimal("200.00"),
         "total_ttc": Decimal("1200.00"),
-        "status": 1,  # Now open instead of draft
+        "status": 1,
         "project_id": 5
     }
-    
-    state_module.set_client(mock_client)
-    result = state_module.get_client()
-    assert result is mock_client
-    state_module.set_client(None)
+
+    result = await proposal_tools_fns["validate_proposal"](proposal_id=123)
+
+    assert isinstance(result, ProposalResult)
+    assert result.status == 1
+    mock_client.validate_proposal.assert_awaited_once_with(123)
+    mock_client.get_proposal_by_id.assert_awaited_once_with(123)
 
 
 @pytest.mark.asyncio
