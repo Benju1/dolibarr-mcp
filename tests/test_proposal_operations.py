@@ -265,11 +265,10 @@ async def test_client_add_proposal_line():
         call_args = mock_request.call_args
         assert call_args[0] == ("POST", "proposals/5/lines")
         payload = call_args[1]["data"]
-        assert isinstance(payload, list)
-        assert len(payload) == 1
-        assert payload[0]["desc"] == "Test Line"
-        assert payload[0]["fk_product"] == 99
-        assert "product_id" not in payload[0]
+        assert isinstance(payload, dict)
+        assert payload["desc"] == "Test Line"
+        assert payload["fk_product"] == 99
+        assert "product_id" not in payload
 
 
 @pytest.mark.asyncio

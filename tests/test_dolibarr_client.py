@@ -181,5 +181,91 @@ class TestDolibarrIntegration:
                 pytest.fail(f"API connection failed: {e}")
 
 
+class TestErrorMessageNormalization:
+    """Test that various Dolibarr error response shapes are surfaced clearly."""
+
+    @pytest.mark.asyncio
+    @patch('aiohttp.ClientSession.request')
+    async def test_error_with_list_in_error_field(self, mock_request):
+        """Error response where 'error' is a list gets joined."""
+        mock_response = AsyncMock()
+        mock_response.status = 400
+        mock_response.reason = "Bad Request"
+        mock_response.text.return_value = '{"error": ["field X required", "field Y invalid"]}'
+        mock_request.return_value.__aenter__.return_value = mock_response
+
+        config = Config(
+            dolibarr_url="https://test.dolibarr.com/api/index.php",
+            api_key="test_key"
+        )
+        async with DolibarrClient(config) as client:
+            with pytest.raises(DolibarrAPIError) as exc_info:
+                await client.get_customer_by_id(1)
+            assert "field X required" in str(exc_info.value)
+            assert "field Y invalid" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    @patch('aiohttp.ClientSession.request')
+    async def test_error_with_errors_dict(self, mock_request):
+        """Error response with an 'errors' dict gets appended as details."""
+        mock_response = AsyncMock()
+        mock_response.status = 400
+        mock_response.reason = "Bad Request"
+        mock_response.text.return_value = '{"error": "Validation failed", "errors": {"qty": "must be > 0"}}'
+        mock_request.return_value.__aenter__.return_value = mock_response
+
+        config = Config(
+            dolibarr_url="https://test.dolibarr.com/api/index.php",
+            api_key="test_key"
+        )
+        async with DolibarrClient(config) as client:
+            with pytest.raises(DolibarrAPIError) as exc_info:
+                await client.get_customer_by_id(1)
+            msg = str(exc_info.value)
+            assert "Validation failed" in msg
+            assert "qty: must be > 0" in msg
+
+    @pytest.mark.asyncio
+    @patch('aiohttp.ClientSession.request')
+    async def test_error_with_errors_list(self, mock_request):
+        """Error response with an 'errors' list gets appended as details."""
+        mock_response = AsyncMock()
+        mock_response.status = 400
+        mock_response.reason = "Bad Request"
+        mock_response.text.return_value = '{"message": "Bad input", "errors": ["err1", "err2"]}'
+        mock_request.return_value.__aenter__.return_value = mock_response
+
+        config = Config(
+            dolibarr_url="https://test.dolibarr.com/api/index.php",
+            api_key="test_key"
+        )
+        async with DolibarrClient(config) as client:
+            with pytest.raises(DolibarrAPIError) as exc_info:
+                await client.get_customer_by_id(1)
+            msg = str(exc_info.value)
+            assert "Bad input" in msg
+            assert "err1" in msg
+            assert "err2" in msg
+
+    @pytest.mark.asyncio
+    @patch('aiohttp.ClientSession.request')
+    async def test_error_string_response(self, mock_request):
+        """Plain string error response is used as message."""
+        mock_response = AsyncMock()
+        mock_response.status = 403
+        mock_response.reason = "Forbidden"
+        mock_response.text.return_value = '"Access denied"'
+        mock_request.return_value.__aenter__.return_value = mock_response
+
+        config = Config(
+            dolibarr_url="https://test.dolibarr.com/api/index.php",
+            api_key="test_key"
+        )
+        async with DolibarrClient(config) as client:
+            with pytest.raises(DolibarrAPIError) as exc_info:
+                await client.get_customer_by_id(1)
+            assert "Access denied" in str(exc_info.value)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

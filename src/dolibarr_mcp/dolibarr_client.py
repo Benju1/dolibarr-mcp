@@ -150,11 +150,23 @@ class DolibarrClient:
                                 error_msg = error_details.get("message", error_msg)
                                 if "code" in error_details:
                                     error_msg = f"{error_msg} (Code: {error_details['code']})"
+                            elif isinstance(error_details, list):
+                                error_msg = "; ".join(str(e) for e in error_details)
                             else:
                                 error_msg = str(error_details)
                         elif "message" in response_data:
                             error_msg = response_data["message"]
-                    
+                        if "errors" in response_data:
+                            errors = response_data["errors"]
+                            if isinstance(errors, dict):
+                                details = "; ".join(f"{k}: {v}" for k, v in errors.items())
+                                error_msg = f"{error_msg} [{details}]"
+                            elif isinstance(errors, list):
+                                details = "; ".join(str(e) for e in errors)
+                                error_msg = f"{error_msg} [{details}]"
+                    elif isinstance(response_data, str):
+                        error_msg = response_data
+
                     raise DolibarrAPIError(
                         message=error_msg,
                         status_code=response.status,
@@ -555,7 +567,7 @@ class DolibarrClient:
         if "product_id" in payload:
             payload["fk_product"] = payload.pop("product_id")
             
-        return await self.request("POST", f"proposals/{proposal_id}/lines", data=[payload])
+        return await self.request("POST", f"proposals/{proposal_id}/lines", data=payload)
 
     async def update_proposal_line(
         self,
