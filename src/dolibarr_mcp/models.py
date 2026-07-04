@@ -291,3 +291,13 @@ class OrderResult(DolibarrBaseModel):
 
     total_ttc: float = Field(..., description="Total gross amount")
     statut: int = Field(..., description="Status")
+
+
+class DocumentDownloadResult(DolibarrBaseModel):
+    """Result of downloading or building a document via Dolibarr's documents API."""
+
+    filename: str = Field(..., description="File name")
+    content: str = Field(..., description="Base64-encoded file content")
+    encoding: str = Field("base64", description="Content encoding (always 'base64')")
+    filesize: Optional[int] = Field(None, description="File size in bytes")
+    content_type: Optional[str] = Field(None, alias="content-type", description="MIME type")

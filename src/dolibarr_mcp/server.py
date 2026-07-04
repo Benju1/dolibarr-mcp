@@ -25,6 +25,7 @@ from .tools.orders import register_order_tools
 from .tools.products import register_product_tools
 from .tools.purchasing_prices import register_purchasing_price_tools
 from .tools.system import register_system_tools
+from .tools.documents import register_document_tools
 
 
 @asynccontextmanager
@@ -88,6 +89,7 @@ register_order_tools(mcp)
 register_product_tools(mcp)
 register_purchasing_price_tools(mcp)
 register_system_tools(mcp)
+register_document_tools(mcp)
 
 
 if __name__ == "__main__":

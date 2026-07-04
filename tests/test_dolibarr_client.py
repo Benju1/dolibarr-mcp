@@ -133,6 +133,73 @@ class TestDolibarrClient:
         url = client._build_url("users")
         assert url == "https://test.dolibarr.com/api/index.php/users"
 
+    @pytest.mark.asyncio
+    @patch('aiohttp.ClientSession.request')
+    async def test_download_document(self, mock_request):
+        """Test downloading a generated document via GET documents/download."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.text.return_value = (
+            '{"filename": "PR2601-0001.odt", "content-type": '
+            '"application/vnd.oasis.opendocument.text", "filesize": 12345, '
+            '"content": "YmFzZTY0Y29udGVudA==", "encoding": "base64"}'
+        )
+        mock_request.return_value.__aenter__.return_value = mock_response
+
+        config = Config(
+            dolibarr_url="https://test.dolibarr.com/api/index.php",
+            api_key="test_key"
+        )
+
+        async with DolibarrClient(config) as client:
+            result = await client.download_document("propal", "PR2601-0001/PR2601-0001.odt")
+
+            assert result["filename"] == "PR2601-0001.odt"
+            assert result["encoding"] == "base64"
+
+        _, kwargs = mock_request.call_args
+        assert kwargs["params"] == {
+            "modulepart": "propal",
+            "original_file": "PR2601-0001/PR2601-0001.odt",
+        }
+        args, _ = mock_request.call_args
+        assert args[0] == "GET"
+        assert args[1] == "https://test.dolibarr.com/api/index.php/documents/download"
+
+    @pytest.mark.asyncio
+    @patch('aiohttp.ClientSession.request')
+    async def test_build_document(self, mock_request):
+        """Test regenerating a document via PUT documents/builddoc."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.text.return_value = (
+            '{"filename": "PR2601-0001.odt", "content": "YmFzZTY0Y29udGVudA==", '
+            '"encoding": "base64"}'
+        )
+        mock_request.return_value.__aenter__.return_value = mock_response
+
+        config = Config(
+            dolibarr_url="https://test.dolibarr.com/api/index.php",
+            api_key="test_key"
+        )
+
+        async with DolibarrClient(config) as client:
+            result = await client.build_document(
+                "propal", "PR2601-0001/PR2601-0001.odt", doctemplate="mycustomodt", langcode="de_DE",
+            )
+
+            assert result["filename"] == "PR2601-0001.odt"
+
+        args, kwargs = mock_request.call_args
+        assert args[0] == "PUT"
+        assert args[1] == "https://test.dolibarr.com/api/index.php/documents/builddoc"
+        assert kwargs["json"] == {
+            "modulepart": "propal",
+            "original_file": "PR2601-0001/PR2601-0001.odt",
+            "doctemplate": "mycustomodt",
+            "langcode": "de_DE",
+        }
+
 
 class TestDolibarrAPIError:
     """Test cases for DolibarrAPIError."""
