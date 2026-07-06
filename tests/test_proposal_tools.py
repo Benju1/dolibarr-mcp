@@ -123,18 +123,15 @@ async def test_create_proposal_returns_full_state(mock_client, proposal_tools_fn
 @pytest.mark.asyncio
 async def test_update_proposal_with_project_id(mock_client, proposal_tools_fns):
     """Test that update_proposal passes project_id as fk_projet."""
-    mock_client.update_proposal.return_value = None
-    mock_client.get_proposal_by_id.return_value = {
-        "id": 123,
-        "ref": "PROP-2025-001",
-        "socid": 10,
+    draft_state = {
+        "id": 123, "ref": "PROP-2025-001", "socid": 10,
         "date": 1703000000,
-        "total_ht": Decimal("1000.00"),
-        "total_tva": Decimal("200.00"),
-        "total_ttc": Decimal("1200.00"),
-        "status": 0,
-        "project_id": 5
+        "total_ht": Decimal("1000.00"), "total_tva": Decimal("200.00"),
+        "total_ttc": Decimal("1200.00"), "status": 0, "project_id": None,
     }
+    updated_state = {**draft_state, "project_id": 5}
+    mock_client.update_proposal.return_value = None
+    mock_client.get_proposal_by_id.side_effect = [draft_state, updated_state]
 
     result = await proposal_tools_fns["update_proposal"](
         proposal_id=123, date=None, payment_mode_id=None, project_id=5
@@ -144,6 +141,51 @@ async def test_update_proposal_with_project_id(mock_client, proposal_tools_fns):
     assert isinstance(result, ProposalResult)
     assert result.id == 123
     assert result.project_id == 5
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status,label", [
+    (1, "validated"),
+    (2, "signed"),
+    (3, "declined"),
+    (4, "billed"),
+])
+async def test_update_proposal_rejects_non_draft(mock_client, proposal_tools_fns, status, label):
+    """update_proposal raises ValueError for non-draft proposals."""
+    mock_client.get_proposal_by_id.return_value = {
+        "id": 127, "ref": "PROP-2025-042", "socid": 10,
+        "date": 1703000000,
+        "total_ht": Decimal("1000.00"), "total_tva": Decimal("200.00"),
+        "total_ttc": Decimal("1200.00"), "status": status, "project_id": None,
+    }
+
+    with pytest.raises(ValueError, match=f"status '{label}'"):
+        await proposal_tools_fns["update_proposal"](
+            proposal_id=127, date=None, payment_mode_id=None, project_id=71
+        )
+
+    mock_client.update_proposal.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_update_proposal_draft_succeeds(mock_client, proposal_tools_fns):
+    """update_proposal proceeds when proposal is draft (status=0)."""
+    draft = {
+        "id": 130, "ref": "PROP-2025-050", "socid": 10,
+        "date": 1703000000,
+        "total_ht": Decimal("500.00"), "total_tva": Decimal("100.00"),
+        "total_ttc": Decimal("600.00"), "status": 0, "project_id": None,
+    }
+    updated = {**draft, "date": 1703100000}
+    mock_client.update_proposal.return_value = None
+    mock_client.get_proposal_by_id.side_effect = [draft, updated]
+
+    result = await proposal_tools_fns["update_proposal"](
+        proposal_id=130, date="2024-12-21", payment_mode_id=None, project_id=None
+    )
+
+    mock_client.update_proposal.assert_awaited_once_with(130, {"date": "2024-12-21"})
+    assert isinstance(result, ProposalResult)
 
 
 @pytest.mark.asyncio

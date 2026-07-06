@@ -119,10 +119,19 @@ def register_proposal_tools(mcp: FastMCP) -> None:
 
         if not payload:
             raise ValueError("At least one field (date, payment_mode_id, project_id) must be provided")
-        
+
+        current = await client.get_proposal_by_id(proposal_id)
+        current_status = int(current.get("status", current.get("statut", -1)))
+        if current_status != 0:
+            status_labels = {1: "validated", 2: "signed", 3: "declined", 4: "billed"}
+            label = status_labels.get(current_status, f"unknown ({current_status})")
+            raise ValueError(
+                f"Proposal {proposal_id} has status '{label}' — only draft proposals can be updated via API. "
+                f"Use the Dolibarr UI to modify non-draft proposals."
+            )
+
         await client.update_proposal(proposal_id, payload)
 
-        # Return updated state
         full = await client.get_proposal_by_id(proposal_id)
         return ProposalResult(**full)
 
