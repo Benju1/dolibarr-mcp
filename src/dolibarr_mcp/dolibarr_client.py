@@ -460,7 +460,7 @@ class DolibarrClient:
         if "product_id" in payload:
             payload["fk_product"] = payload.pop("product_id")
             
-        return await self.request("POST", f"invoices/{invoice_id}/lines", data=payload)
+        return await self.request("POST", f"invoices/{invoice_id}/line", data=payload)
 
     async def update_invoice_line(
         self,
@@ -567,7 +567,7 @@ class DolibarrClient:
         if "product_id" in payload:
             payload["fk_product"] = payload.pop("product_id")
             
-        return await self.request("POST", f"proposals/{proposal_id}/lines", data=payload)
+        return await self.request("POST", f"proposals/{proposal_id}/line", data=payload)
 
     async def update_proposal_line(
         self,
@@ -653,7 +653,7 @@ class DolibarrClient:
         if "product_id" in payload:
             payload["fk_product"] = payload.pop("product_id")
             
-        return await self.request("POST", f"orders/{order_id}/lines", data=payload)
+        return await self.request("POST", f"orders/{order_id}/line", data=payload)
 
     async def update_order_line(
         self,

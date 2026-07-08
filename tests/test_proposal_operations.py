@@ -263,7 +263,7 @@ async def test_client_add_proposal_line():
         )
         
         call_args = mock_request.call_args
-        assert call_args[0] == ("POST", "proposals/5/lines")
+        assert call_args[0] == ("POST", "proposals/5/line")
         payload = call_args[1]["data"]
         assert isinstance(payload, dict)
         assert payload["desc"] == "Test Line"
