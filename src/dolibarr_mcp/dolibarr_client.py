@@ -504,6 +504,11 @@ class DolibarrClient:
         result = await self.request("GET", "setup/dictionary/payment_types")
         return result if isinstance(result, list) else []
 
+    async def get_payment_terms(self) -> List[Dict[str, Any]]:
+        """Get available payment terms/conditions from the dictionary."""
+        result = await self.request("GET", "setup/dictionary/payment_terms")
+        return result if isinstance(result, list) else []
+
     # ============================================================================
     # PROPOSAL MANAGEMENT
     # ============================================================================

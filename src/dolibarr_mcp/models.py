@@ -258,7 +258,15 @@ class ProposalResult(DolibarrBaseModel):
     status: int = Field(
         ..., description="Status (0=Draft, 1=Open, 2=Signed, 3=Declined, 4=Billed)"
     )
-    project_id: Optional[int] = Field(None, description="Linked project ID")
+    project_id: Optional[int] = Field(None, alias="fk_project", description="Linked project ID")
+    cond_reglement_id: Optional[int] = Field(None, description="Payment terms ID")
+    cond_reglement_code: Optional[str] = Field(None, description="Payment terms code (e.g. '50_20_30')")
+    cond_reglement_doc: Optional[str] = Field(None, description="Payment terms text as shown on document")
+    mode_reglement_id: Optional[int] = Field(None, description="Payment mode ID")
+    mode_reglement_code: Optional[str] = Field(None, description="Payment mode code (e.g. 'VIR')")
+    duree_validite: Optional[int] = Field(None, description="Validity duration in days")
+    fin_validite: Optional[int] = Field(None, description="Validity end date timestamp")
+    deposit_percent: Optional[str] = Field(None, description="Deposit percentage")
     lines: Optional[list[ProposalLine]] = Field(None, description="Proposal line items")
 
 

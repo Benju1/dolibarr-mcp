@@ -96,6 +96,7 @@ async def test_proposal_line_with_product():
 async def test_create_proposal_returns_full_state(mock_client, proposal_tools_fns):
     """create_proposal returns ProposalResult after creating via client."""
     mock_client.create_proposal.return_value = 123
+    mock_client.get_payment_modes.return_value = [{"id": "2", "code": "VIR"}]
     mock_client.get_proposal_by_id.return_value = {
         "id": 123,
         "ref": "PROP-2025-001",
@@ -105,18 +106,28 @@ async def test_create_proposal_returns_full_state(mock_client, proposal_tools_fn
         "total_tva": Decimal("200.00"),
         "total_ttc": Decimal("1200.00"),
         "status": 0,
-        "project_id": 5
+        "fk_project": 5,
+        "mode_reglement_id": 2,
+        "mode_reglement_code": "VIR",
+        "duree_validite": 30,
     }
 
     result = await proposal_tools_fns["create_proposal"](
         customer_id=10, date="2024-12-20",
         lines=None, project_id=None, payment_mode_id=None,
+        cond_reglement_code=None, duree_validite=None,
     )
 
     assert isinstance(result, ProposalResult)
     assert result.id == 123
     assert result.ref == "PROP-2025-001"
+    assert result.project_id == 5
+    assert result.mode_reglement_id == 2
+    assert result.duree_validite == 30
     mock_client.create_proposal.assert_awaited_once()
+    payload = mock_client.create_proposal.call_args[0][0]
+    assert payload["mode_reglement_id"] == 2
+    assert payload["duree_validite"] == 30
     mock_client.get_proposal_by_id.assert_awaited_once_with(123)
 
 
@@ -127,14 +138,15 @@ async def test_update_proposal_with_project_id(mock_client, proposal_tools_fns):
         "id": 123, "ref": "PROP-2025-001", "socid": 10,
         "date": 1703000000,
         "total_ht": Decimal("1000.00"), "total_tva": Decimal("200.00"),
-        "total_ttc": Decimal("1200.00"), "status": 0, "project_id": None,
+        "total_ttc": Decimal("1200.00"), "status": 0, "fk_project": None,
     }
-    updated_state = {**draft_state, "project_id": 5}
+    updated_state = {**draft_state, "fk_project": 5}
     mock_client.update_proposal.return_value = None
     mock_client.get_proposal_by_id.side_effect = [draft_state, updated_state]
 
     result = await proposal_tools_fns["update_proposal"](
-        proposal_id=123, date=None, payment_mode_id=None, project_id=5
+        proposal_id=123, date=None, payment_mode_id=None, project_id=5,
+        cond_reglement_code=None, duree_validite=None,
     )
 
     mock_client.update_proposal.assert_awaited_once_with(123, {"fk_projet": 5})
@@ -156,12 +168,13 @@ async def test_update_proposal_rejects_non_draft(mock_client, proposal_tools_fns
         "id": 127, "ref": "PROP-2025-042", "socid": 10,
         "date": 1703000000,
         "total_ht": Decimal("1000.00"), "total_tva": Decimal("200.00"),
-        "total_ttc": Decimal("1200.00"), "status": status, "project_id": None,
+        "total_ttc": Decimal("1200.00"), "status": status, "fk_project": None,
     }
 
     with pytest.raises(ValueError, match=f"status '{label}'"):
         await proposal_tools_fns["update_proposal"](
-            proposal_id=127, date=None, payment_mode_id=None, project_id=71
+            proposal_id=127, date=None, payment_mode_id=None, project_id=71,
+            cond_reglement_code=None, duree_validite=None,
         )
 
     mock_client.update_proposal.assert_not_awaited()
@@ -174,14 +187,15 @@ async def test_update_proposal_draft_succeeds(mock_client, proposal_tools_fns):
         "id": 130, "ref": "PROP-2025-050", "socid": 10,
         "date": 1703000000,
         "total_ht": Decimal("500.00"), "total_tva": Decimal("100.00"),
-        "total_ttc": Decimal("600.00"), "status": 0, "project_id": None,
+        "total_ttc": Decimal("600.00"), "status": 0, "fk_project": None,
     }
     updated = {**draft, "date": 1703100000}
     mock_client.update_proposal.return_value = None
     mock_client.get_proposal_by_id.side_effect = [draft, updated]
 
     result = await proposal_tools_fns["update_proposal"](
-        proposal_id=130, date="2024-12-21", payment_mode_id=None, project_id=None
+        proposal_id=130, date="2024-12-21", payment_mode_id=None, project_id=None,
+        cond_reglement_code=None, duree_validite=None,
     )
 
     mock_client.update_proposal.assert_awaited_once_with(130, {"date": "2024-12-21"})
@@ -260,7 +274,7 @@ async def test_get_proposals_with_customer_filter():
             "total_tva": Decimal("100.00"),
             "total_ttc": Decimal("600.00"),
             "status": 1,
-            "project_id": None
+            "fk_project": None
         }
     ]
     
@@ -283,7 +297,7 @@ async def test_validate_proposal_returns_updated_state(mock_client, proposal_too
         "total_tva": Decimal("200.00"),
         "total_ttc": Decimal("1200.00"),
         "status": 1,
-        "project_id": 5
+        "fk_project": 5
     }
 
     result = await proposal_tools_fns["validate_proposal"](proposal_id=123)
