@@ -62,7 +62,8 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         project_id: Optional[int] = Field(None, description="Project ID"),
         payment_mode_id: Optional[int] = Field(None, description="Payment mode ID. Auto-resolved to wire transfer (VIR) if omitted."),
         cond_reglement_code: Optional[str] = Field(None, description="Payment terms code (e.g. '50_20_30', '30_70', 'RECEP'). Resolved to cond_reglement_id via dictionary."),
-        duree_validite: Optional[int] = Field(None, description="Validity duration in days (e.g. 30). Defaults to 30 if omitted.")
+        duree_validite: Optional[int] = Field(None, description="Validity duration in days (e.g. 30). Defaults to 30 if omitted."),
+        array_options: Optional[dict] = Field(None, description="Extrafields dict for proposal header, e.g. {'options_payment_term_override': 'custom text'}")
     ) -> ProposalResult:
         """Create a new proposal (draft). Returns full proposal details."""
         client = _require_client()
@@ -96,6 +97,9 @@ def register_proposal_tools(mcp: FastMCP) -> None:
 
         payload["duree_validite"] = duree_validite if duree_validite is not None else 30
 
+        if isinstance(array_options, dict):
+            payload["array_options"] = array_options
+
         result = await client.create_proposal(payload)
         proposal_id = result.get("id") if isinstance(result, dict) else result
         
@@ -125,7 +129,8 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         payment_mode_id: Optional[int] = Field(None, description="Payment mode ID"),
         project_id: Optional[int] = Field(None, description="Project ID"),
         cond_reglement_code: Optional[str] = Field(None, description="Payment terms code (e.g. '50_20_30', '30_70', 'RECEP'). Resolved to cond_reglement_id via dictionary."),
-        duree_validite: Optional[int] = Field(None, description="Validity duration in days (e.g. 30)")
+        duree_validite: Optional[int] = Field(None, description="Validity duration in days (e.g. 30)"),
+        array_options: Optional[dict] = Field(None, description="Extrafields dict for proposal header, e.g. {'options_payment_term_override': 'custom text'}")
     ) -> ProposalResult:
         """Update an existing proposal (draft only). Returns updated proposal."""
         client = _require_client()
@@ -148,6 +153,9 @@ def register_proposal_tools(mcp: FastMCP) -> None:
             else:
                 codes = [t.get("code") for t in terms]
                 raise ValueError(f"Unknown payment terms code '{cond_reglement_code}'. Available: {codes}")
+
+        if isinstance(array_options, dict):
+            payload["array_options"] = array_options
 
         if not payload:
             raise ValueError("At least one field must be provided")

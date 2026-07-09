@@ -267,6 +267,9 @@ class ProposalResult(DolibarrBaseModel):
     duree_validite: Optional[int] = Field(None, description="Validity duration in days")
     fin_validite: Optional[int] = Field(None, description="Validity end date timestamp")
     deposit_percent: Optional[str] = Field(None, description="Deposit percentage")
+    array_options: Optional[Dict[str, Any]] = Field(
+        None, description="Extrafields on proposal header"
+    )
     lines: Optional[list[ProposalLine]] = Field(None, description="Proposal line items")
 
 
