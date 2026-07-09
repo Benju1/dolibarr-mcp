@@ -609,6 +609,46 @@ def get_client() -> DolibarrClient:
 
 ---
 
+## ADR-006: Extrafields (array_options) - Zwei Update-Patterns
+
+### Status: Akzeptiert
+
+### Kontext
+
+Dolibarr Extrafields (`array_options`) werden auf Header-Ebene (z.B. Proposal) und Line-Ebene (z.B. Proposal-Line) unterschiedlich aktualisiert. Die Asymmetrie sieht auf den ersten Blick wie ein Bug aus, ist aber korrekt.
+
+### Dolibarr API-Verhalten (entscheidend)
+
+Dolibarr's `insertExtraFields()` macht **sparse Updates**: nur Keys die im Request enthalten sind werden in der DB aktualisiert. Keys die nicht mitgeschickt werden, bleiben unverändert. Das gilt sowohl fuer Header- als auch Line-Extrafields.
+
+### Die zwei Patterns
+
+**Header-Update (Sparse Payload)** - `update_proposal`:
+```python
+payload = {}  # nur geaenderte Felder
+if isinstance(array_options, dict):
+    payload["array_options"] = array_options  # durchreichen
+```
+Schickt nur was sich aendert. Kein Merge noetig, weil die API nur die gesendeten Keys verarbeitet.
+
+**Line-Update (Full Payload Read-Modify-Write)** - `update_proposal_line`:
+```python
+# Holt die ganze Line, weil die Line-API ALLE Felder braucht
+payload = {"desc": current.desc, "subprice": ..., "qty": ..., ...}
+if current.get("array_options"):
+    payload["array_options"] = current["array_options"]
+# Neue Extrafields drueber mergen
+if isinstance(array_options, dict):
+    payload["array_options"] = {**existing, **array_options}
+```
+Die Line-API erwartet den vollstaendigen Payload. Der Merge ist eine Konsequenz dieses Patterns: da der gesamte Payload zurueckgeschickt wird, muessen bestehende Extrafields im Payload enthalten sein.
+
+### Entscheidung
+
+Kein client-seitiger Merge auf Header-Ebene. Die Dolibarr API behandelt `array_options` nativ als sparse Update. Der Merge auf Line-Ebene ist kein Widerspruch, sondern Konsequenz des Full-Payload-Patterns.
+
+---
+
 ## Summary: Alle Entscheidungen
 
 | ADR | Titel | Status | Key Decision |
@@ -618,6 +658,7 @@ def get_client() -> DolibarrClient:
 | **ADR-003** | DDD Layers | ✅ Akzeptiert | Tools → Client → Config/Models → HTTP |
 | **ADR-004** | Pydantic v2 | ✅ Akzeptiert | Data Validation mit Type Safety |
 | **ADR-005** | Global State | ✅ Akzeptiert | `get_client()` function mit threading.Lock |
+| **ADR-006** | Extrafields Update-Patterns | ✅ Akzeptiert | Header: sparse pass-through, Line: full-payload merge - beides korrekt |
 
 ---
 
