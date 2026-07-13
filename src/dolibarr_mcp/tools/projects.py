@@ -117,11 +117,15 @@ def register_project_tools(mcp: FastMCP) -> None:
         ref: Optional[str] = Field(None, description="Project reference. If omitted, Dolibarr auto-generates via its numbering module"),
         socid: Optional[int] = Field(None, description="Customer ID"),
         description: Optional[str] = Field(None, description="Project description"),
-        status: int = Field(1, description="Initial status (0=Draft, 1=Open)")
+        status: int = Field(1, description="Initial status (0=Draft, 1=Open)"),
+        usage_opportunity: Optional[int] = Field(None, description="Enable Lead/Opportunity tracking (0=No, 1=Yes)"),
+        fk_opp_status: Optional[int] = Field(None, description="Lead/Opportunity status ID"),
+        opp_amount: Optional[float] = Field(None, description="Opportunity amount"),
+        opp_percent: Optional[float] = Field(None, description="Opportunity probability (0-100)"),
     ) -> int:
         """Create a new project. Returns the new project ID."""
         client = _require_client()
-            
+
         payload = {
             "title": title,
             "ref": ref or "auto",
@@ -131,7 +135,15 @@ def register_project_tools(mcp: FastMCP) -> None:
             payload["socid"] = socid
         if description:
             payload["description"] = description
-            
+        if usage_opportunity is not None:
+            payload["usage_opportunity"] = usage_opportunity
+        if fk_opp_status is not None:
+            payload["fk_opp_status"] = fk_opp_status
+        if opp_amount is not None:
+            payload["opp_amount"] = opp_amount
+        if opp_percent is not None:
+            payload["opp_percent"] = opp_percent
+
         return await client.create_project(payload)
 
     @mcp.tool()

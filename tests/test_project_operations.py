@@ -218,6 +218,8 @@ class TestCreateProjectTool:
         result = await project_tools["create_project"](
             title="Test Project", ref=None, socid=None,
             description=None, status=1,
+            usage_opportunity=None, fk_opp_status=None,
+            opp_amount=None, opp_percent=None,
         )
 
         payload = mock_client.create_project.call_args[0][0]
@@ -232,11 +234,32 @@ class TestCreateProjectTool:
         result = await project_tools["create_project"](
             title="Test Project", ref="CUSTOM-001", socid=None,
             description=None, status=1,
+            usage_opportunity=None, fk_opp_status=None,
+            opp_amount=None, opp_percent=None,
         )
 
         payload = mock_client.create_project.call_args[0][0]
         assert payload["ref"] == "CUSTOM-001"
         assert result == 43
+
+    @pytest.mark.asyncio
+    async def test_create_project_with_lead_fields(self, mock_client, project_tools):
+        """Lead/opportunity fields are included in the create payload."""
+        mock_client.create_project.return_value = 44
+
+        result = await project_tools["create_project"](
+            title="Lead Project", ref=None, socid=10,
+            description="A lead", status=1,
+            usage_opportunity=1, fk_opp_status=1,
+            opp_amount=5000.0, opp_percent=50.0,
+        )
+
+        payload = mock_client.create_project.call_args[0][0]
+        assert payload["usage_opportunity"] == 1
+        assert payload["fk_opp_status"] == 1
+        assert payload["opp_amount"] == 5000.0
+        assert payload["opp_percent"] == 50.0
+        assert result == 44
 
 
 class TestUpdateProjectTool:
