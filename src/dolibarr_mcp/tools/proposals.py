@@ -76,7 +76,7 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         }
 
         if project_id:
-            payload["fk_projet"] = project_id
+            payload["fk_project"] = project_id
 
         if payment_mode_id is None:
             modes = await client.get_payment_modes()
@@ -141,7 +141,7 @@ def register_proposal_tools(mcp: FastMCP) -> None:
         if payment_mode_id is not None:
             payload["mode_reglement_id"] = payment_mode_id
         if project_id is not None:
-            payload["fk_projet"] = project_id
+            payload["fk_project"] = project_id
         if duree_validite is not None:
             payload["duree_validite"] = duree_validite
 

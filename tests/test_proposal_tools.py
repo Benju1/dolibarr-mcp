@@ -133,7 +133,7 @@ async def test_create_proposal_returns_full_state(mock_client, proposal_tools_fn
 
 @pytest.mark.asyncio
 async def test_update_proposal_with_project_id(mock_client, proposal_tools_fns):
-    """Test that update_proposal passes project_id as fk_projet."""
+    """Test that update_proposal passes project_id as fk_project."""
     draft_state = {
         "id": 123, "ref": "PROP-2025-001", "socid": 10,
         "date": 1703000000,
@@ -149,7 +149,7 @@ async def test_update_proposal_with_project_id(mock_client, proposal_tools_fns):
         cond_reglement_code=None, duree_validite=None,
     )
 
-    mock_client.update_proposal.assert_awaited_once_with(123, {"fk_projet": 5})
+    mock_client.update_proposal.assert_awaited_once_with(123, {"fk_project": 5})
     assert isinstance(result, ProposalResult)
     assert result.id == 123
     assert result.project_id == 5
