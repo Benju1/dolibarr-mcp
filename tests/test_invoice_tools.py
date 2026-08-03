@@ -165,6 +165,24 @@ async def test_create_invoice_with_lines(mock_client, invoice_tools):
 
 
 @pytest.mark.asyncio
+async def test_validate_invoice_returns_updated_state(mock_client, invoice_tools):
+    """validate_invoice calls client and returns InvoiceResult."""
+    mock_client.validate_invoice.return_value = None
+    mock_client.get_invoice_by_id.return_value = {
+        "id": 42, "ref": "FA2501-0001", "socid": 1,
+        "total_ht": "100.0", "total_tva": "19.0", "total_ttc": "119.0",
+        "statut": 1, "paye": 0, "status": 1, "date": 1700000000,
+    }
+
+    result = await invoice_tools["validate_invoice"](invoice_id=42)
+
+    mock_client.validate_invoice.assert_awaited_once_with(42)
+    mock_client.get_invoice_by_id.assert_awaited_once_with(42)
+    assert result.id == 42
+    assert result.status == 1
+
+
+@pytest.mark.asyncio
 async def test_set_invoice_to_draft_calls_client(mock_client, invoice_tools):
     """set_invoice_to_draft calls client and returns InvoiceResult."""
     mock_client.set_invoice_to_draft.return_value = None
