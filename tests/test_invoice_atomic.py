@@ -37,7 +37,7 @@ class TestInvoiceAtomic:
         # Verify call
         args, kwargs = mock_request.call_args
         assert args[0] == "POST"
-        assert args[1] == "https://test.dolibarr.com/api/index.php/invoices/1/line"
+        assert args[1] == "https://test.dolibarr.com/api/index.php/invoices/1/lines"
         assert kwargs['json'] == {
             "desc": "Test Line",
             "qty": 1,
