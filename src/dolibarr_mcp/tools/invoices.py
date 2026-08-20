@@ -24,6 +24,7 @@ def register_invoice_tools(mcp: FastMCP) -> None:
         lines: Optional[List[InvoiceLine]] = Field(None, description="Invoice lines"),
         project_id: Optional[int] = Field(None, description="Project ID"),
         payment_mode_id: Optional[int] = Field(None, description="Payment mode ID"),
+        cond_reglement_code: Optional[str] = Field(None, description="Payment terms code (e.g. '30D', '30DENDMONTH', 'RECEP'). Resolved to cond_reglement_id via dictionary."),
         note_public: Optional[str] = Field(None, description="Public note (visible on PDF)"),
         note_private: Optional[str] = Field(None, description="Private note (internal only)")
     ) -> int:
@@ -42,6 +43,14 @@ def register_invoice_tools(mcp: FastMCP) -> None:
             payload["fk_project"] = project_id
         if payment_mode_id:
             payload["mode_reglement_id"] = payment_mode_id
+        if cond_reglement_code:
+            terms = await client.get_payment_terms()
+            match = next((t for t in terms if t.get("code") == cond_reglement_code), None)
+            if match:
+                payload["cond_reglement_id"] = int(match["id"])
+            else:
+                codes = [t.get("code") for t in terms]
+                raise ValueError(f"Unknown payment terms code '{cond_reglement_code}'. Available: {codes}")
         if note_public is not None:
             payload["note_public"] = note_public
         if note_private is not None:
@@ -152,6 +161,7 @@ def register_invoice_tools(mcp: FastMCP) -> None:
         invoice_id: int = Field(..., description="Invoice ID to update"),
         date: Optional[str] = Field(None, description="Invoice date (YYYY-MM-DD)"),
         payment_mode_id: Optional[int] = Field(None, description="Payment mode ID"),
+        cond_reglement_code: Optional[str] = Field(None, description="Payment terms code (e.g. '30D', '30DENDMONTH', 'RECEP'). Resolved to cond_reglement_id via dictionary."),
         note_public: Optional[str] = Field(None, description="Public note (visible on PDF)"),
         note_private: Optional[str] = Field(None, description="Private note (internal only)")
     ) -> int:
@@ -163,6 +173,14 @@ def register_invoice_tools(mcp: FastMCP) -> None:
             payload["date"] = date
         if payment_mode_id:
             payload["mode_reglement_id"] = payment_mode_id
+        if cond_reglement_code is not None:
+            terms = await client.get_payment_terms()
+            match = next((t for t in terms if t.get("code") == cond_reglement_code), None)
+            if match:
+                payload["cond_reglement_id"] = int(match["id"])
+            else:
+                codes = [t.get("code") for t in terms]
+                raise ValueError(f"Unknown payment terms code '{cond_reglement_code}'. Available: {codes}")
         if note_public is not None:
             payload["note_public"] = note_public
         if note_private is not None:

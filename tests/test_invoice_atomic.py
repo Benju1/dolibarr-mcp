@@ -119,6 +119,7 @@ async def test_create_invoice_passes_line_values():
         result = await create_invoice(
             customer_id=10,
             date="2026-02-11",
+            cond_reglement_code=None,
             lines=[
                 InvoiceLine(
                     desc="Test item",

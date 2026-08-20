@@ -136,7 +136,7 @@ async def test_create_invoice_without_lines(mock_client, invoice_tools):
     mock_client.create_invoice.return_value = 100
 
     result = await invoice_tools["create_invoice"](
-        customer_id=1, date="2025-01-01", lines=None
+        customer_id=1, date="2025-01-01", lines=None, cond_reglement_code=None
     )
 
     assert result == 100
@@ -156,12 +156,74 @@ async def test_create_invoice_with_lines(mock_client, invoice_tools):
     ]
 
     result = await invoice_tools["create_invoice"](
-        customer_id=1, date="2025-01-01", lines=lines
+        customer_id=1, date="2025-01-01", lines=lines, cond_reglement_code=None
     )
 
     assert result == 200
     mock_client.create_invoice.assert_awaited_once()
     assert mock_client.add_invoice_line.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_create_invoice_resolves_payment_terms(mock_client, invoice_tools):
+    """create_invoice resolves cond_reglement_code to cond_reglement_id via dictionary."""
+    mock_client.create_invoice.return_value = 300
+    mock_client.get_payment_terms.return_value = [
+        {"id": "1", "code": "RECEP"},
+        {"id": "3", "code": "30D"},
+    ]
+
+    result = await invoice_tools["create_invoice"](
+        customer_id=1, date="2025-01-01", lines=None, cond_reglement_code="30D"
+    )
+
+    assert result == 300
+    payload = mock_client.create_invoice.await_args.args[0]
+    assert payload["cond_reglement_id"] == 3
+
+
+@pytest.mark.asyncio
+async def test_create_invoice_unknown_payment_terms_raises(mock_client, invoice_tools):
+    """create_invoice raises ValueError for an unknown cond_reglement_code."""
+    mock_client.get_payment_terms.return_value = [{"id": "1", "code": "RECEP"}]
+
+    with pytest.raises(ValueError, match="Unknown payment terms code"):
+        await invoice_tools["create_invoice"](
+            customer_id=1, date="2025-01-01", lines=None, cond_reglement_code="NOPE"
+        )
+
+    mock_client.create_invoice.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_update_invoice_resolves_payment_terms(mock_client, invoice_tools):
+    """update_invoice resolves cond_reglement_code and forwards cond_reglement_id."""
+    mock_client.update_invoice.return_value = 42
+    mock_client.get_payment_terms.return_value = [
+        {"id": "1", "code": "RECEP"},
+        {"id": "3", "code": "30D"},
+    ]
+
+    result = await invoice_tools["update_invoice"](
+        invoice_id=42, date=None, payment_mode_id=None,
+        cond_reglement_code="30D", note_public=None, note_private=None
+    )
+
+    assert result == 42
+    mock_client.update_invoice.assert_awaited_once_with(42, {"cond_reglement_id": 3})
+
+
+@pytest.mark.asyncio
+async def test_update_invoice_unknown_payment_terms_raises(mock_client, invoice_tools):
+    """update_invoice raises ValueError for an unknown cond_reglement_code."""
+    mock_client.get_payment_terms.return_value = [{"id": "1", "code": "RECEP"}]
+
+    with pytest.raises(ValueError, match="Unknown payment terms code"):
+        await invoice_tools["update_invoice"](
+            invoice_id=42, cond_reglement_code="NOPE"
+        )
+
+    mock_client.update_invoice.assert_not_awaited()
 
 
 @pytest.mark.asyncio
