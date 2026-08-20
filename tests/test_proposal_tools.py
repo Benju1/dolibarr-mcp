@@ -373,7 +373,7 @@ async def test_add_proposal_line_with_extrafields(mock_client, proposal_tools_fn
             "subprice": "0",
             "qty": "1",
             "tva_tx": "20.0",
-            "product_type": 0,
+            "product_type": "0",
             "rang": 3,
             "array_options": {"options_pos": "1.2"},
         }

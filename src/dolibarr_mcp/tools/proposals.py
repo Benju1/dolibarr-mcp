@@ -112,6 +112,10 @@ def register_proposal_tools(mcp: FastMCP) -> None:
                     for key in ("subprice", "qty", "tva_tx"):
                         if key in line_data:
                             line_data[key] = str(line_data[key])
+                    if "product_type" in line_data:
+                        line_data["product_type"] = str(line_data["product_type"])
+                    else:
+                        line_data["product_type"] = "0"
                     await client.add_proposal_line(proposal_id, line_data)
             except Exception:
                 # Rollback: delete the proposal if line addition fails
@@ -270,7 +274,7 @@ def register_proposal_tools(mcp: FastMCP) -> None:
             "subprice": str(unit_price),
             "qty": str(quantity),
             "tva_tx": str(vat_rate),
-            "product_type": 0
+            "product_type": "0"
         }
 
         if isinstance(product_id, int):
