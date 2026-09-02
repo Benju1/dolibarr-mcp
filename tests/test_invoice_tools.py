@@ -260,3 +260,75 @@ async def test_set_invoice_to_draft_calls_client(mock_client, invoice_tools):
     mock_client.get_invoice_by_id.assert_awaited_once_with(42)
     assert result.id == 42
     assert result.status == 0
+
+
+@pytest.mark.asyncio
+async def test_add_payment_full_remainder_uses_invoice_endpoint(mock_client, invoice_tools):
+    """Without amount, add_payment_to_invoice pays the full remainder via invoices/{id}/payments."""
+    mock_client.get_bank_accounts.return_value = [{"id": "1", "label": "Bank"}]
+    mock_client.get_payment_modes.return_value = [{"id": "2", "code": "VIR"}]
+    mock_client.add_payment_to_invoice.return_value = 77
+
+    result = await invoice_tools["add_payment_to_invoice"](
+        invoice_id=282, date="2026-08-06", amount=None, payment_mode_id=None,
+        account_id=None, num_payment=None, comment="Anzahlung", close_paid=True
+    )
+
+    assert result == 77
+    mock_client.add_distributed_payment.assert_not_awaited()
+    mock_client.add_payment_to_invoice.assert_awaited_once_with(282, {
+        "datepaye": "2026-08-06",
+        "paymentid": 2,
+        "closepaidinvoices": "yes",
+        "accountid": 1,
+        "num_payment": "",
+        "comment": "Anzahlung",
+    })
+
+
+@pytest.mark.asyncio
+async def test_add_payment_partial_uses_distributed_endpoint(mock_client, invoice_tools):
+    """With amount, add_payment_to_invoice records a partial payment via paymentsdistributed."""
+    mock_client.add_distributed_payment.return_value = 78
+
+    result = await invoice_tools["add_payment_to_invoice"](
+        invoice_id=282, date="2026-08-06", amount=2000.0, payment_mode_id=4,
+        account_id=1, num_payment="UEB-123", comment=None, close_paid=True
+    )
+
+    assert result == 78
+    mock_client.add_payment_to_invoice.assert_not_awaited()
+    mock_client.get_bank_accounts.assert_not_awaited()
+    mock_client.get_payment_modes.assert_not_awaited()
+    mock_client.add_distributed_payment.assert_awaited_once_with({
+        "datepaye": "2026-08-06",
+        "paymentid": 4,
+        "closepaidinvoices": "yes",
+        "accountid": 1,
+        "num_payment": "UEB-123",
+        "comment": "",
+        "arrayofamounts": {"282": {"amount": "2000.00", "multicurrency_amount": ""}},
+    })
+
+
+@pytest.mark.asyncio
+async def test_add_payment_rejects_non_positive_amount(mock_client, invoice_tools):
+    """add_payment_to_invoice raises ValueError for amount <= 0 before any API call."""
+    with pytest.raises(ValueError, match="greater than 0"):
+        await invoice_tools["add_payment_to_invoice"](
+            invoice_id=282, date="2026-08-06", amount=0, payment_mode_id=4, account_id=1
+        )
+    mock_client.add_distributed_payment.assert_not_awaited()
+    mock_client.add_payment_to_invoice.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_get_invoice_payments_calls_client(mock_client, invoice_tools):
+    """get_invoice_payments returns the client's payment list."""
+    payments = [{"amount": "2000", "date": "2026-08-06", "type": "VIR", "num": "", "ref": "PAY1"}]
+    mock_client.get_invoice_payments.return_value = payments
+
+    result = await invoice_tools["get_invoice_payments"](invoice_id=282)
+
+    assert result == payments
+    mock_client.get_invoice_payments.assert_awaited_once_with(282)

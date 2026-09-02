@@ -221,19 +221,27 @@ def register_invoice_tools(mcp: FastMCP) -> None:
     async def add_payment_to_invoice(
         invoice_id: int = Field(..., description="Invoice ID"),
         date: str = Field(..., description="Payment date (YYYY-MM-DD)"),
+        amount: Optional[float] = Field(None, description="Payment amount. Omit to pay the full remaining amount; set for a partial payment (invoice stays open with the reduced remainder)."),
         payment_mode_id: Optional[int] = Field(None, description="Payment mode ID. Auto-resolved to wire transfer if omitted."),
         account_id: Optional[int] = Field(None, description="Bank account ID. Auto-resolved if only one account exists."),
         num_payment: Optional[str] = Field(None, description="Payment reference number"),
+        comment: Optional[str] = Field(None, description="Comment stored on the payment record"),
         close_paid: bool = Field(True, description="Close invoice as paid if fully paid")
     ) -> int:
-        """Add a payment to an invoice (full remainder).
+        """Add a payment to an invoice. Returns the payment ID.
 
-        This tool pays the remaining unpaid amount of the invoice.
+        The invoice must be validated (status 1); Dolibarr rejects payments on drafts.
+        Without ``amount`` the full remaining amount is paid (POST invoices/{id}/payments).
+        With ``amount`` a partial payment is recorded via invoices/paymentsdistributed;
+        the invoice stays open with the remainder reduced accordingly.
         Bank account and payment mode are auto-resolved when omitted:
         - account_id: uses the sole bank account (errors if multiple exist)
         - payment_mode_id: uses wire transfer (Virement/VIR)
         """
         client = _require_client()
+
+        if amount is not None and amount <= 0:
+            raise ValueError("amount must be greater than 0")
 
         if account_id is None:
             accounts = await client.get_bank_accounts()
@@ -263,9 +271,28 @@ def register_invoice_tools(mcp: FastMCP) -> None:
             "closepaidinvoices": "yes" if close_paid else "no",
             "accountid": account_id,
             "num_payment": num_payment or "",
+            "comment": comment or "",
         }
 
-        return await client.add_payment_to_invoice(invoice_id, payload)
+        if amount is None:
+            return await client.add_payment_to_invoice(invoice_id, payload)
+
+        payload["arrayofamounts"] = {
+            str(invoice_id): {"amount": f"{amount:.2f}", "multicurrency_amount": ""}
+        }
+        return await client.add_distributed_payment(payload)
+
+    @mcp.tool()
+    async def get_invoice_payments(
+        invoice_id: int = Field(..., description="Invoice ID")
+    ) -> List[dict]:
+        """List payments recorded on an invoice (amount, date, type, num, ref).
+
+        Use this to check what has already been paid before recording a payment,
+        and to verify the remaining amount afterwards.
+        """
+        client = _require_client()
+        return await client.get_invoice_payments(invoice_id)
 
     @mcp.tool()
     async def delete_invoice(

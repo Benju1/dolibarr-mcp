@@ -491,8 +491,21 @@ class DolibarrClient:
         return await self.request("POST", f"invoices/{invoice_id}/settodraft", data=payload)
 
     async def add_payment_to_invoice(self, invoice_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Add a payment to an invoice."""
+        """Add a payment to an invoice (always the full remaining amount)."""
         return await self.request("POST", f"invoices/{invoice_id}/payments", data=data)
+
+    async def add_distributed_payment(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Add a payment with explicit per-invoice amounts (partial payments).
+
+        Uses POST /invoices/paymentsdistributed; ``data["arrayofamounts"]`` maps
+        invoice IDs to ``{"amount": "...", "multicurrency_amount": ""}``.
+        """
+        return await self.request("POST", "invoices/paymentsdistributed", data=data)
+
+    async def get_invoice_payments(self, invoice_id: int) -> List[Dict[str, Any]]:
+        """Get the list of payments recorded on an invoice."""
+        result = await self.request("GET", f"invoices/{invoice_id}/payments")
+        return result if isinstance(result, list) else []
 
     async def get_bank_accounts(self) -> List[Dict[str, Any]]:
         """Get list of bank accounts."""
