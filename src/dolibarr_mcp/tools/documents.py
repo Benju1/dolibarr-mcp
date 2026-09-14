@@ -1,9 +1,11 @@
 """Document download/generation tools for Dolibarr MCP Server."""
 
+from pathlib import PurePosixPath
+
 from fastmcp import FastMCP
 from pydantic import Field
 
-from ..dolibarr_client import DolibarrClient
+from ..dolibarr_client import DolibarrAPIError, DolibarrClient
 from ..models import DocumentDownloadResult
 
 
@@ -69,4 +71,56 @@ def register_document_tools(mcp: FastMCP) -> None:
             raise ValueError(f"Proposal {proposal_id} has no ref; cannot build document")
         original_file = proposal.get("last_main_doc") or f"{ref}/{ref}.pdf"
         result = await client.build_document("propal", original_file, doctemplate=doctemplate, langcode=langcode)
+        return DocumentDownloadResult(**result)
+
+    @mcp.tool()
+    async def build_invoice_document(
+        invoice_id: int = Field(..., description="Invoice ID"),
+        doctemplate: str = Field("", description="Template: PDF model name (e.g. 'sponge') or ODT as 'generic_invoice_odt:<server path>/<Template>.odt', e.g. 'generic_invoice_odt:/bitnami/dolibarr/documents/doctemplates/invoices/J-Rechnung.odt'. Empty = configured default."),
+        langcode: str = Field("", description="Language code, e.g. 'de_DE' (defaults to system language)")
+    ) -> DocumentDownloadResult:
+        """(Re)generate the document for an invoice on the Dolibarr server and return it.
+
+        Works for validated invoices too. ODT templates produce
+        <ref>_<Template>.odt; Dolibarr's builddoc endpoint then answers 404
+        although the file was generated, so the ODT is fetched explicitly.
+        """
+        client = _require_client()
+        invoice = await client.get_invoice_by_id(invoice_id)
+        ref = invoice.get("ref")
+        if not ref or ref.startswith("(PROV"):
+            raise ValueError(f"Invoice {invoice_id} has no final ref; validate it first")
+        try:
+            result = await client.build_document("facture", f"{ref}/{ref}.pdf", doctemplate=doctemplate, langcode=langcode)
+            return DocumentDownloadResult(**result)
+        except DolibarrAPIError as e:
+            if e.status_code != 404 or ":" not in doctemplate:
+                raise
+        template_name = PurePosixPath(doctemplate.split(":", 1)[1]).stem
+        result = await client.download_document("facture", f"{ref}/{ref}_{template_name}.odt")
+        return DocumentDownloadResult(**result)
+
+    @mcp.tool()
+    async def download_invoice_document(
+        invoice_id: int = Field(..., description="Invoice ID"),
+        filename: str = Field("", description="File name inside the invoice's document dir, e.g. '000438_J-Rechnung.odt'. Empty = last generated document (last_main_doc).")
+    ) -> DocumentDownloadResult:
+        """Download a generated document (ODT/PDF) of an invoice.
+
+        Raises an error if nothing has been generated yet; use
+        build_invoice_document first.
+        """
+        client = _require_client()
+        invoice = await client.get_invoice_by_id(invoice_id)
+        if filename:
+            original_file = f"{invoice.get('ref')}/{filename}"
+        else:
+            original_file = invoice.get("last_main_doc")
+            if not original_file:
+                raise ValueError(
+                    f"Invoice {invoice_id} has no generated document yet (last_main_doc empty). "
+                    "Generate one first with build_invoice_document."
+                )
+            original_file = original_file.removeprefix("facture/")
+        result = await client.download_document("facture", original_file)
         return DocumentDownloadResult(**result)

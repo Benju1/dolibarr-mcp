@@ -8,8 +8,11 @@ import pytest
 from unittest.mock import AsyncMock
 
 from dolibarr_mcp import state as state_module
+from dolibarr_mcp.dolibarr_client import DolibarrAPIError
 from dolibarr_mcp.models import DocumentDownloadResult
 from dolibarr_mcp.tools.documents import register_document_tools
+
+ODT_TEMPLATE = "generic_invoice_odt:/bitnami/dolibarr/documents/doctemplates/invoices/J-Rechnung.odt"
 
 
 @pytest.fixture
@@ -153,3 +156,117 @@ async def test_build_proposal_document_without_ref_raises(mock_client, document_
         await document_tools_fns["build_proposal_document"](proposal_id=123, doctemplate="", langcode="")
 
     mock_client.build_document.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_build_invoice_document_pdf_template_returns_builddoc_result(mock_client, document_tools_fns):
+    """build_invoice_document with a PDF model returns the builddoc payload directly."""
+    mock_client.get_invoice_by_id.return_value = {"id": 283, "ref": "000438", "last_main_doc": ""}
+    mock_client.build_document.return_value = {
+        "filename": "000438.pdf",
+        "content-type": "application/pdf",
+        "content": "YmFzZTY0Y29udGVudA==",
+        "encoding": "base64",
+    }
+
+    result = await document_tools_fns["build_invoice_document"](invoice_id=283, doctemplate="sponge", langcode="")
+
+    assert isinstance(result, DocumentDownloadResult)
+    assert result.filename == "000438.pdf"
+    mock_client.build_document.assert_awaited_once_with("facture", "000438/000438.pdf", doctemplate="sponge", langcode="")
+    mock_client.download_document.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_build_invoice_document_odt_template_fetches_generated_odt_after_404(mock_client, document_tools_fns):
+    """With an ODT template Dolibarr answers 404 after generating <ref>_<Template>.odt; the tool downloads that file."""
+    mock_client.get_invoice_by_id.return_value = {"id": 283, "ref": "000438", "last_main_doc": ""}
+    mock_client.build_document.side_effect = DolibarrAPIError("Not Found: File not found", status_code=404)
+    mock_client.download_document.return_value = {
+        "filename": "000438_J-Rechnung.odt",
+        "content-type": "application/vnd.oasis.opendocument.text",
+        "content": "YmFzZTY0Y29udGVudA==",
+        "encoding": "base64",
+    }
+
+    result = await document_tools_fns["build_invoice_document"](invoice_id=283, doctemplate=ODT_TEMPLATE, langcode="de_DE")
+
+    assert isinstance(result, DocumentDownloadResult)
+    assert result.filename == "000438_J-Rechnung.odt"
+    mock_client.build_document.assert_awaited_once_with("facture", "000438/000438.pdf", doctemplate=ODT_TEMPLATE, langcode="de_DE")
+    mock_client.download_document.assert_awaited_once_with("facture", "000438/000438_J-Rechnung.odt")
+
+
+@pytest.mark.asyncio
+async def test_build_invoice_document_reraises_non_404_errors(mock_client, document_tools_fns):
+    """A real generation error (500) is not swallowed by the ODT 404 workaround."""
+    mock_client.get_invoice_by_id.return_value = {"id": 283, "ref": "000438", "last_main_doc": ""}
+    mock_client.build_document.side_effect = DolibarrAPIError("Error generating document", status_code=500)
+
+    with pytest.raises(DolibarrAPIError, match="Error generating document"):
+        await document_tools_fns["build_invoice_document"](invoice_id=283, doctemplate=ODT_TEMPLATE, langcode="")
+
+    mock_client.download_document.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_build_invoice_document_reraises_404_for_non_odt_template(mock_client, document_tools_fns):
+    """A 404 without an ODT template (no ':' in doctemplate) is a real error, not the ODT naming quirk."""
+    mock_client.get_invoice_by_id.return_value = {"id": 283, "ref": "000438", "last_main_doc": ""}
+    mock_client.build_document.side_effect = DolibarrAPIError("Not Found", status_code=404)
+
+    with pytest.raises(DolibarrAPIError):
+        await document_tools_fns["build_invoice_document"](invoice_id=283, doctemplate="", langcode="")
+
+    mock_client.download_document.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_build_invoice_document_draft_invoice_raises(mock_client, document_tools_fns):
+    """Draft invoices only have a provisional ref; generating a document for them is refused."""
+    mock_client.get_invoice_by_id.return_value = {"id": 283, "ref": "(PROV283)", "last_main_doc": ""}
+
+    with pytest.raises(ValueError, match="validate it first"):
+        await document_tools_fns["build_invoice_document"](invoice_id=283, doctemplate="", langcode="")
+
+    mock_client.build_document.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_download_invoice_document_uses_last_main_doc(mock_client, document_tools_fns):
+    """download_invoice_document strips the 'facture/' prefix from last_main_doc."""
+    mock_client.get_invoice_by_id.return_value = {
+        "id": 283, "ref": "000438", "last_main_doc": "facture/000438/000438_J-Rechnung.odt",
+    }
+    mock_client.download_document.return_value = {
+        "filename": "000438_J-Rechnung.odt", "content": "YmFzZTY0Y29udGVudA==", "encoding": "base64",
+    }
+
+    result = await document_tools_fns["download_invoice_document"](invoice_id=283, filename="")
+
+    assert isinstance(result, DocumentDownloadResult)
+    mock_client.download_document.assert_awaited_once_with("facture", "000438/000438_J-Rechnung.odt")
+
+
+@pytest.mark.asyncio
+async def test_download_invoice_document_explicit_filename(mock_client, document_tools_fns):
+    """An explicit filename is resolved inside the invoice's document dir."""
+    mock_client.get_invoice_by_id.return_value = {"id": 283, "ref": "000438", "last_main_doc": ""}
+    mock_client.download_document.return_value = {
+        "filename": "000438_J-Rechnung.odt", "content": "YmFzZTY0Y29udGVudA==", "encoding": "base64",
+    }
+
+    await document_tools_fns["download_invoice_document"](invoice_id=283, filename="000438_J-Rechnung.odt")
+
+    mock_client.download_document.assert_awaited_once_with("facture", "000438/000438_J-Rechnung.odt")
+
+
+@pytest.mark.asyncio
+async def test_download_invoice_document_without_generated_doc_raises(mock_client, document_tools_fns):
+    """download_invoice_document raises a clear error if nothing was generated yet."""
+    mock_client.get_invoice_by_id.return_value = {"id": 283, "ref": "000438", "last_main_doc": ""}
+
+    with pytest.raises(ValueError, match="no generated document yet"):
+        await document_tools_fns["download_invoice_document"](invoice_id=283, filename="")
+
+    mock_client.download_document.assert_not_awaited()
