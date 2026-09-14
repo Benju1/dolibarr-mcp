@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union, Literal
-from pydantic import BaseModel, Field, ConfigDict, GetJsonSchemaHandler, field_validator
+from pydantic import AliasChoices, BaseModel, Field, ConfigDict, GetJsonSchemaHandler, field_validator
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema
 
@@ -79,7 +79,9 @@ class ProjectSearchResult(DolibarrBaseModel):
     title: str = Field(..., description="Project title")
     socid: Optional[int] = Field(None, description="Associated customer ID (socid)")
     status: int = Field(..., description="Project status")
-    fk_opp_status: Optional[int] = Field(None, description="Opportunity/lead status ID (set if project is a lead)")
+    usage_opportunity: Optional[int] = Field(None, description="1 if lead/opportunity tracking is enabled")
+    fk_opp_status: Optional[int] = Field(None, validation_alias=AliasChoices("opp_status", "fk_opp_status"), description="Opportunity/lead status ID (set if project is a lead)")
+    opp_percent: Optional[float] = Field(None, description="Opportunity probability (0-100)")
     opp_amount: Optional[float] = Field(None, description="Opportunity amount")
     description: Optional[str] = Field(None, description="Project description")
     date_creation: Optional[int] = Field(None, description="Creation timestamp")

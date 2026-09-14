@@ -256,7 +256,7 @@ class TestCreateProjectTool:
 
         payload = mock_client.create_project.call_args[0][0]
         assert payload["usage_opportunity"] == 1
-        assert payload["fk_opp_status"] == 1
+        assert payload["opp_status"] == 1
         assert payload["opp_amount"] == 5000.0
         assert payload["opp_percent"] == 50.0
         assert result == 44
@@ -326,7 +326,7 @@ class TestUpdateProjectTool:
         )
 
         mock_client.update_project.assert_awaited_once_with(306, {
-            "usage_opportunity": 1, "fk_opp_status": 2,
+            "usage_opportunity": 1, "opp_status": 2,
             "opp_amount": 5000.0, "opp_percent": 75.0,
         })
 

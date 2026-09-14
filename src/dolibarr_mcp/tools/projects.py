@@ -138,7 +138,8 @@ def register_project_tools(mcp: FastMCP) -> None:
         if usage_opportunity is not None:
             payload["usage_opportunity"] = usage_opportunity
         if fk_opp_status is not None:
-            payload["fk_opp_status"] = fk_opp_status
+            # Dolibarr Project property is opp_status (DB column fk_opp_status)
+            payload["opp_status"] = fk_opp_status
         if opp_amount is not None:
             payload["opp_amount"] = opp_amount
         if opp_percent is not None:
@@ -173,7 +174,8 @@ def register_project_tools(mcp: FastMCP) -> None:
         if usage_opportunity is not None:
             payload["usage_opportunity"] = usage_opportunity
         if fk_opp_status is not None:
-            payload["fk_opp_status"] = fk_opp_status
+            # Dolibarr Project property is opp_status (DB column fk_opp_status)
+            payload["opp_status"] = fk_opp_status
         if opp_amount is not None:
             payload["opp_amount"] = opp_amount
         if opp_percent is not None:
