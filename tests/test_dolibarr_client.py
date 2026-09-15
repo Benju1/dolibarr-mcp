@@ -227,9 +227,14 @@ class TestDolibarrAPIError:
 
 # Example of how to add integration tests
 @pytest.mark.integration
+@pytest.mark.integration
 class TestDolibarrIntegration:
-    """Integration tests (require real Dolibarr instance)."""
-    
+    """Integration tests (require real Dolibarr instance and network).
+
+    Deselected by default (see addopts in pyproject.toml); run explicitly with
+    ``pytest -m integration``.
+    """
+
     @pytest.mark.asyncio
     async def test_real_connection(self):
         """Test connection to real Dolibarr instance."""

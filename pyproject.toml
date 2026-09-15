@@ -67,7 +67,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short --cov=src/dolibarr_mcp"
+addopts = "-v --tb=short --cov=src/dolibarr_mcp -m \"not integration\""
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
 ]

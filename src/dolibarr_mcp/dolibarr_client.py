@@ -194,11 +194,17 @@ class DolibarrClient:
                 except:
                     pass
             
-            raise DolibarrAPIError(f"HTTP client error: {endpoint}")
+            # Keep the transport-level cause (DNS, refused, TLS, timeout) visible,
+            # e.g. "ClientConnectorDNSError: Cannot connect to host erp.example.com:443"
+            raise DolibarrAPIError(
+                f"HTTP client error on {method} {endpoint}: {type(e).__name__}: {e}"
+            ) from e
         except Exception as e:
             if isinstance(e, DolibarrAPIError):
                 raise
-            raise DolibarrAPIError(f"Unexpected error: {str(e)}")
+            raise DolibarrAPIError(
+                f"Unexpected error on {method} {endpoint}: {type(e).__name__}: {e}"
+            ) from e
     
     # ============================================================================
     # SYSTEM ENDPOINTS
@@ -213,7 +219,7 @@ class DolibarrClient:
         try:
             # First try the standard status endpoint
             return await self.request("GET", "status")
-        except DolibarrAPIError:
+        except DolibarrAPIError as status_error:
             # If status fails, try to get module list as a connectivity test
             try:
                 result = await self.request("GET", "setup/modules")
@@ -224,9 +230,9 @@ class DolibarrClient:
                         "api_version": "1.0",
                         "modules_available": isinstance(result, (list, dict))
                     }
-            except:
+            except DolibarrAPIError:
                 pass
-            
+
             # If all else fails, try a simple user list
             try:
                 result = await self.request("GET", "users?limit=1")
@@ -236,8 +242,11 @@ class DolibarrClient:
                         "dolibarr_version": "API Working",
                         "api_version": "1.0"
                     }
-            except:
-                raise DolibarrAPIError("Cannot connect to Dolibarr API. Please check your configuration.")
+            except DolibarrAPIError as e:
+                raise DolibarrAPIError(
+                    f"Cannot connect to Dolibarr API ({e}). Please check your configuration.",
+                    status_code=e.status_code,
+                ) from status_error
     
     # ============================================================================
     # USER MANAGEMENT

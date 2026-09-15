@@ -35,6 +35,15 @@ class Config(BaseSettings):
         default="INFO",
     )
 
+    dolibarr_odt_template_dir: str = Field(
+        description=(
+            "Absolute directory on the Dolibarr server that holds the ODT templates "
+            "(DOL_DATA_ROOT/doctemplates). Used to resolve template names like "
+            "'J-Rechnung' for build_*_document."
+        ),
+        default="",
+    )
+
     @field_validator("dolibarr_url")
     @classmethod
     def validate_dolibarr_url(cls, v: str) -> str:
@@ -125,6 +134,7 @@ class Config(BaseSettings):
                 ),
                 dolibarr_api_key=os.getenv("DOLIBARR_API_KEY", ""),
                 log_level=os.getenv("LOG_LEVEL", "INFO"),
+                dolibarr_odt_template_dir=os.getenv("DOLIBARR_ODT_TEMPLATE_DIR", ""),
             )
             if os.getenv("DEBUG_CONFIG"):
                 print(f"✅ Config loaded:", file=sys.stderr)
