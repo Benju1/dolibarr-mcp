@@ -23,6 +23,8 @@ class DolibarrAPIError(Exception):
 class DolibarrClient:
     """Professional Dolibarr API client with comprehensive functionality."""
     
+    _RETRYABLE_CONNECTION_ERRORS = (aiohttp.ServerDisconnectedError, aiohttp.ClientOSError)
+
     def __init__(self, config: Config):
         """Initialize the Dolibarr client."""
         self.config = config
@@ -46,8 +48,12 @@ class DolibarrClient:
     async def start_session(self):
         """Start the HTTP session."""
         if not self.session:
+            # force_close: no keep-alive reuse. Apache closes idle connections,
+            # and the long-running MCP server would otherwise send the next
+            # request on a dead connection ("Server disconnected").
             self.session = aiohttp.ClientSession(
                 timeout=self.timeout,
+                connector=aiohttp.TCPConnector(force_close=True),
                 headers={
                     "DOLAPIKEY": self.api_key,
                     "Content-Type": "application/json",
@@ -90,8 +96,19 @@ class DolibarrClient:
         params: Optional[Dict] = None,
         data: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """Public helper retained for compatibility with legacy integrations and tests."""
-        return await self._make_request(method, endpoint, params=params, data=data)
+        """Public helper retained for compatibility with legacy integrations and tests.
+
+        A GET that loses the connection before a response is retried once.
+        Writes are never retried: the client cannot know whether Dolibarr
+        already processed them (duplicate proposal, line or invoice).
+        """
+        try:
+            return await self._make_request(method, endpoint, params=params, data=data)
+        except DolibarrAPIError as e:
+            if method.upper() != "GET" or not isinstance(e.__cause__, self._RETRYABLE_CONNECTION_ERRORS):
+                raise
+            self.logger.debug(f"Retrying GET {endpoint} after connection loss: {e}")
+            return await self._make_request(method, endpoint, params=params, data=data)
 
     def _build_url(self, endpoint: str) -> str:
         """Build full API URL."""
