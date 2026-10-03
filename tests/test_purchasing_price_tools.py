@@ -149,10 +149,12 @@ async def test_add_purchasing_price_minimal(mock_client, pp_tools):
     product_id, payload = mock_client.add_product_purchasing_price.call_args[0]
     assert product_id == 42
     assert payload["fourn_id"] == 10
-    assert payload["fourn_price"] == "25.5"
-    assert payload["fourn_qty"] == 1
-    assert payload["tva_tx"] == "20.0"
-    assert "fourn_ref" not in payload
+    assert payload["buyprice"] == 25.5
+    assert payload["qty"] == 1
+    assert payload["price_base_type"] == "HT"
+    assert payload["availability"] == 0
+    assert payload["tva_tx"] == 20.0
+    assert payload["ref_fourn"] == ""
     assert "delivery_time_days" not in payload
     assert "multicurrency_code" not in payload
     assert result == 1
@@ -171,10 +173,10 @@ async def test_add_purchasing_price_all_fields(mock_client, pp_tools):
     ))
 
     _, payload = mock_client.add_product_purchasing_price.call_args[0]
-    assert payload["fourn_ref"] == "SUP-X-100"
+    assert payload["ref_fourn"] == "SUP-X-100"
     assert payload["delivery_time_days"] == 7
     assert payload["multicurrency_code"] == "USD"
-    assert payload["multicurrency_unitprice"] == "28.0"
+    assert payload["multicurrency_buyprice"] == 28.0
     assert result == 5
 
 
@@ -189,8 +191,8 @@ async def test_add_purchasing_price_quantity_tier(mock_client, pp_tools):
     ))
 
     _, payload = mock_client.add_product_purchasing_price.call_args[0]
-    assert payload["fourn_qty"] == 100
-    assert payload["fourn_price"] == "18.0"
+    assert payload["qty"] == 100
+    assert payload["buyprice"] == 1800.0
 
 
 @pytest.mark.asyncio
@@ -287,3 +289,48 @@ async def test_client_uses_purchase_prices_path():
     client.request = AsyncMock(return_value={})
     await client.delete_product_purchasing_price(42, 7)
     assert client.request.call_args.args[:2] == ("DELETE", "products/42/purchase_prices/7")
+
+
+# ---------------------------------------------------------------------------
+# Live response shape of GET products/{id}/purchase_prices (ProductFournisseur):
+# fourn_* keys, id = product ID, dates as Unix timestamps. Values are synthetic.
+# ---------------------------------------------------------------------------
+
+LIVE_SHAPE_RESPONSE = [
+    {
+        "id": "42",
+        "product_fourn_price_id": "901",
+        "fourn_id": "7",
+        "fourn_name": "Example Supplier GmbH",
+        "fourn_ref": "EX-1",
+        "fourn_price": "100.00000000",
+        "fourn_unitprice": "100.00000000",
+        "fourn_qty": "1",
+        "fourn_tva_tx": "20.0000",
+        "fourn_remise_percent": "0",
+        "fourn_multicurrency_code": "",
+        "fourn_multicurrency_unitprice": None,
+        "fourn_date_creation": 1767225600,
+        "fourn_date_modification": 1767225600,
+        "fk_product": None,
+        "delivery_time_days": None,
+    }
+]
+
+
+@pytest.mark.asyncio
+async def test_get_purchasing_prices_maps_live_response_shape(mock_client, pp_tools):
+    mock_client.get_product_purchasing_prices.return_value = LIVE_SHAPE_RESPONSE
+
+    result = await pp_tools["get_product_purchasing_prices"](product_id=42)
+
+    assert len(result) == 1
+    entry = result[0]
+    assert entry.id == 901
+    assert entry.fk_product == 42
+    assert entry.fk_soc == 7
+    assert entry.supplier_name == "Example Supplier GmbH"
+    assert entry.ref_fourn == "EX-1"
+    assert str(entry.price) == "100.00000000"
+    assert entry.multicurrency_code is None
+    assert entry.tms == "2026-01-01T00:00:00+00:00"

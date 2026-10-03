@@ -276,21 +276,42 @@ class ProposalResult(DolibarrBaseModel):
 
 
 class PurchasingPriceResult(DolibarrBaseModel):
-    """Supplier purchasing price for a product."""
+    """Supplier purchasing price for a product.
 
-    id: int = Field(..., description="Purchasing price entry ID")
-    fk_product: int = Field(..., description="Product ID")
-    fk_soc: int = Field(..., description="Supplier thirdparty ID")
-    ref_fourn: Optional[str] = Field(None, description="Supplier's product reference")
-    price: Optional[ScientificDecimal] = Field(None, description="Purchase price (HT)")
-    quantity: Optional[ScientificDecimal] = Field(None, alias="fourn_qty", description="Minimum quantity for this price")
-    tva_tx: Optional[ScientificDecimal] = Field(None, description="VAT rate (%)")
-    remise_percent: Optional[ScientificDecimal] = Field(None, description="Discount percentage")
-    multicurrency_code: Optional[str] = Field(None, description="Currency code (e.g. EUR, USD)")
-    multicurrency_unitprice: Optional[ScientificDecimal] = Field(None, description="Unit price in foreign currency")
+    GET products/{id}/purchase_prices returns ProductFournisseur objects with
+    fourn_* keys (id = product ID, product_fourn_price_id = price entry ID,
+    dates as Unix timestamps). The plain names are kept as fallback aliases.
+    """
+
+    id: int = Field(..., validation_alias=AliasChoices("product_fourn_price_id", "id"), description="Purchasing price entry ID")
+    fk_product: Optional[int] = Field(None, validation_alias=AliasChoices("product_id", "fk_product"), description="Product ID")
+    fk_soc: Optional[int] = Field(None, validation_alias=AliasChoices("fourn_id", "fk_soc"), description="Supplier thirdparty ID")
+    supplier_name: Optional[str] = Field(None, validation_alias=AliasChoices("fourn_name", "supplier_name"), description="Supplier name")
+    ref_fourn: Optional[str] = Field(None, validation_alias=AliasChoices("fourn_ref", "ref_fourn"), description="Supplier's product reference")
+    price: Optional[ScientificDecimal] = Field(None, validation_alias=AliasChoices("fourn_price", "price"), description="Purchase price (HT) for the minimum quantity")
+    unit_price: Optional[ScientificDecimal] = Field(None, validation_alias=AliasChoices("fourn_unitprice", "unitprice"), description="Purchase unit price (HT)")
+    quantity: Optional[ScientificDecimal] = Field(None, validation_alias=AliasChoices("fourn_qty", "quantity"), description="Minimum quantity for this price")
+    tva_tx: Optional[ScientificDecimal] = Field(None, validation_alias=AliasChoices("fourn_tva_tx", "tva_tx"), description="VAT rate (%)")
+    remise_percent: Optional[ScientificDecimal] = Field(None, validation_alias=AliasChoices("fourn_remise_percent", "remise_percent"), description="Discount percentage")
+    multicurrency_code: Optional[str] = Field(None, validation_alias=AliasChoices("fourn_multicurrency_code", "multicurrency_code"), description="Currency code (e.g. EUR, USD)")
+    multicurrency_unitprice: Optional[ScientificDecimal] = Field(None, validation_alias=AliasChoices("fourn_multicurrency_unitprice", "multicurrency_unitprice"), description="Unit price in foreign currency")
     delivery_time_days: Optional[int] = Field(None, description="Delivery time in days")
-    datec: Optional[str] = Field(None, description="Creation date")
-    tms: Optional[str] = Field(None, description="Last modification timestamp")
+    datec: Optional[str] = Field(None, validation_alias=AliasChoices("fourn_date_creation", "datec"), description="Creation date (ISO 8601)")
+    tms: Optional[str] = Field(None, validation_alias=AliasChoices("fourn_date_modification", "tms"), description="Last modification date (ISO 8601), the price date")
+
+    @field_validator("datec", "tms", mode="before")
+    @classmethod
+    def _timestamp_to_iso(cls, value: Any) -> Any:
+        if isinstance(value, (int, float)) or (isinstance(value, str) and value.isdigit()):
+            from datetime import datetime, timezone
+
+            return datetime.fromtimestamp(int(value), tz=timezone.utc).isoformat()
+        return value
+
+    @field_validator("multicurrency_code", mode="before")
+    @classmethod
+    def _empty_currency_to_none(cls, value: Any) -> Any:
+        return value or None
 
 
 class OrderResult(DolibarrBaseModel):

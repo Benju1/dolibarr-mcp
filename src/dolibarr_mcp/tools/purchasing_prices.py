@@ -30,7 +30,7 @@ def register_purchasing_price_tools(mcp: FastMCP) -> None:
         client = _require_client()
         try:
             result = await client.get_product_purchasing_prices(product_id)
-            return [PurchasingPriceResult(**item) for item in result]
+            return [PurchasingPriceResult(**{**item, "product_id": product_id}) for item in result]
         except DolibarrAPIError as e:
             raise RuntimeError(f"Dolibarr API Error: {e.message}")
 
@@ -54,20 +54,24 @@ def register_purchasing_price_tools(mcp: FastMCP) -> None:
         """
         client = _require_client()
 
+        # Argument names of addPurchasePrice() in api_products.class.php
+        # (POST {id}/purchase_prices). buyprice is the price for the minimum
+        # quantity, Dolibarr derives the unit price as buyprice / qty.
         payload: Dict[str, Any] = {
+            "qty": quantity,
+            "buyprice": round(price * quantity, 8),
+            "price_base_type": "HT",
             "fourn_id": supplier_id,
-            "fourn_price": str(price),
-            "fourn_qty": quantity,
-            "tva_tx": str(tva_tx),
+            "availability": 0,
+            "ref_fourn": supplier_ref or "",
+            "tva_tx": tva_tx,
         }
-        if supplier_ref is not None:
-            payload["fourn_ref"] = supplier_ref
         if delivery_time_days is not None:
             payload["delivery_time_days"] = delivery_time_days
         if multicurrency_code is not None:
             payload["multicurrency_code"] = multicurrency_code
         if multicurrency_unitprice is not None:
-            payload["multicurrency_unitprice"] = str(multicurrency_unitprice)
+            payload["multicurrency_buyprice"] = round(multicurrency_unitprice * quantity, 8)
 
         return await client.add_product_purchasing_price(product_id, payload)
 
