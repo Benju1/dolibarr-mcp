@@ -822,7 +822,7 @@ class DolibarrClient:
 
     async def get_product_purchasing_prices(self, product_id: int) -> List[Dict[str, Any]]:
         """Get supplier purchasing prices for a product."""
-        result = await self.request("GET", f"products/{product_id}/purchasing_prices")
+        result = await self.request("GET", f"products/{product_id}/purchase_prices")
         return result if isinstance(result, list) else []
 
     async def add_product_purchasing_price(
@@ -833,12 +833,12 @@ class DolibarrClient:
     ) -> Dict[str, Any]:
         """Add a supplier purchasing price to a product."""
         payload = self._merge_payload(data, **kwargs)
-        result = await self.request("POST", f"products/{product_id}/purchasing_prices", data=payload)
+        result = await self.request("POST", f"products/{product_id}/purchase_prices", data=payload)
         return self._extract_identifier(result)
 
     async def delete_product_purchasing_price(self, product_id: int, price_id: int) -> Dict[str, Any]:
         """Delete a supplier purchasing price from a product."""
-        return await self.request("DELETE", f"products/{product_id}/purchasing_prices/{price_id}")
+        return await self.request("DELETE", f"products/{product_id}/purchase_prices/{price_id}")
 
     # ============================================================================
     # DOCUMENT DOWNLOAD / GENERATION

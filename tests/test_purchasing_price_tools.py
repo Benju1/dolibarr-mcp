@@ -261,3 +261,29 @@ def test_purchasing_price_result_extra_fields_ignored():
     result = PurchasingPriceResult(**data)
     assert result.id == 1
     assert not hasattr(result, "some_unknown_field")
+
+
+# ---------------------------------------------------------------------------
+# REST path: Dolibarr exposes {id}/purchase_prices (api_products.class.php),
+# not purchasing_prices (404, RP-04 angebot-agent run PRJ000292).
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_client_uses_purchase_prices_path():
+    from unittest.mock import MagicMock
+
+    from dolibarr_mcp.dolibarr_client import DolibarrClient
+
+    client = DolibarrClient(MagicMock())
+    client.request = AsyncMock(return_value=[])
+
+    await client.get_product_purchasing_prices(42)
+    assert client.request.call_args.args[:2] == ("GET", "products/42/purchase_prices")
+
+    client.request = AsyncMock(return_value=7)
+    await client.add_product_purchasing_price(42, {"price": 1})
+    assert client.request.call_args.args[:2] == ("POST", "products/42/purchase_prices")
+
+    client.request = AsyncMock(return_value={})
+    await client.delete_product_purchasing_price(42, 7)
+    assert client.request.call_args.args[:2] == ("DELETE", "products/42/purchase_prices/7")
